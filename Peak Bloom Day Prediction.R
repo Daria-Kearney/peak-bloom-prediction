@@ -128,10 +128,15 @@ cherrytembin %>%
 diff<- cherrytembin %>%
   group_by(year, location) %>%
   mutate(absdiff = abs(predicted_doy-bloom_doy)) %>%
+  #filter(year>= 2011) %>% #
   group_by(year) %>%
   filter(year>=2011) %>%
   summarise(sum= sum(absdiff))
 print(diff)
+#Calculating the mean of the sum of the Absolute Difference for three locations between 1950-2020
+#The mean over the 70 years is 15.5 which performs better than demo
+mean(diff$sum)
+sum(diff$sum)
 ####################################################################################################################
 ####################################################################################################################
 ####################################################################################################################
