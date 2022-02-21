@@ -68,6 +68,9 @@ temp_all_hot_cold<- temp_all_hot_cold %>%
   mutate(cold = ifelse(seasons == "Spring", is.na("cold"), cold)) %>%
   mutate(hot = ifelse(seasons == "Winter", is.na("hot"), hot))
 
+#Make separate data frame for later
+temp_exp<- temp_all_hot_cold
+
 #selecting important data
 temp_all_hot_cold<- select(temp_all_hot_cold, "location", "year", "cold", "hot")
 
