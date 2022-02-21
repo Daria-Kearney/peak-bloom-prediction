@@ -123,6 +123,15 @@ cherrytembin %>%
   geom_point(aes(y = bloom_doy)) +
   facet_grid(cols = vars(str_to_title(location))) +
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
+
+#Calculating Absolute Difference for three locations between 1950-2020 getting the sums for 2011-2020
+diff<- cherrytembin %>%
+  group_by(year, location) %>%
+  mutate(absdiff = abs(predicted_doy-bloom_doy)) %>%
+  group_by(year) %>%
+  filter(year>=2011) %>%
+  summarise(sum= sum(absdiff))
+print(diff)
 ####################################################################################################################
 ####################################################################################################################
 ####################################################################################################################
