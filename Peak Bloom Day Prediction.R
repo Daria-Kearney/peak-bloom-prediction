@@ -88,6 +88,41 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 
 #Might have to change the criteria for the average temperature.
 #Still seeing what is the best model and predictions
+
+#Merging bloom days for the three locations note: takes away Vancouver days
+cherry <- read.csv("data/washingtondc.csv") %>% 
+  bind_rows(read.csv("data/liestal.csv")) %>% 
+  bind_rows(read.csv("data/kyoto.csv"))
+
+cherrytembin<- merge(cherry, temp_all_hot_cold, by= c("location", "year"))
+
+#Getting rid of unnecessary variables
+cherrytembin<- select(cherrytembin, -c("alt", "lat", "long", "bloom_date"))
+
+#Fitting linear regression to see how it performs
+test_ls_fit<- lm(bloom_doy ~ year + location + cold + hot, data = cherrytembin)
+summary(test_ls_fit)
+
+#RSS
+sum(resid(test_ls_fit)^2)
+deviance(test_ls_fit)
+#MSE
+mean(test_ls_fit$residuals^2)
+#AIC
+AIC(test_ls_fit)
+#All better than standard LR given in demo
+
+#Fitting it for the past predictions for 3 locations
+cherrytembin<- cherrytembin %>% 
+  bind_cols(predicted_doy = predict(test_ls_fit, newdata= cherrytembin))
+
+# Plot the predictions alongside the actual observations for 1950 up to 2020.
+cherrytembin %>% 
+  ggplot(aes(x = year, y = predicted_doy)) +
+  geom_line() +
+  geom_point(aes(y = bloom_doy)) +
+  facet_grid(cols = vars(str_to_title(location))) +
+  labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
 ####################################################################################################################
 ####################################################################################################################
 ####################################################################################################################
