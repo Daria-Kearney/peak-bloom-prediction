@@ -6,8 +6,8 @@ library(mgcv) # gam function for splines
 library(rnoaa)
 library(geosphere) # distm function for euclidean distance
 library(randomForest)
-library(missForest)
-library(gbm)
+library(missForest) # missForest()
+library(gbm) # gbm()
 library(xgboost) # xgb.train() and xgboost()
 
 # Load data
@@ -334,9 +334,9 @@ sum(out2$Total_diff_v2) #196.26
 out1 %>% left_join(out2, by="Year") %>% mutate(difference=Total_diff_v1-Total_diff_v2)
 
 
-##############################
-# Random Forest and Boosting #
-##############################
+#################
+# Random Forest #
+#################
 
 train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
   select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
@@ -367,9 +367,7 @@ test.imputed <- test.imputed %>% filter(year==2011)
 yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
   bind_cols(test.imputed,predicted_doy=.)
 
-mean((yhat.rf-test$bloom_doy)**2) # test mse = 7.70 for 2011
-
-
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.70/8.18 for 2011
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -391,11 +389,11 @@ for(i in 2010:2020){
   
   train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
   
-  rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
-  
   test.imputed <- train.imputed %>% bind_rows(test)
   test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
   test.imputed <- test.imputed %>% filter(year== i + 1)
+  
+  rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
   
   predictions <- predict(rf.cherry, newdata = test.imputed) %>% 
     bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
@@ -453,6 +451,115 @@ Results_V3 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 #write.csv(c(Results_V3), file = 'MAE_seed_634_sunlightdc.csv')
 
 sum(Results_V3$Abs_diff) # 121.01 (seed 635), 122.75 (seed 634)
+
+#####################
+# Gradient Boosting #
+#####################
+
+train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
+  select(-c(lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
+  select(-c(lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+#Impute missing data using randomForest and update with proximity calculations:
+train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+#rfImpute uses na.roughfix initally to impute using median/mode.
+
+test.imputed <- train.imputed %>% bind_rows(test)
+test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+test.imputed <- test.imputed %>% filter(year==2011)
+
+#boosting
+boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                    shrinkage = 0.001)
+summary(boost.cherry) # relative influence plot
+
+yhat.boost <- predict(boost.cherry, newdata = test.imputed)
+
+mean((yhat.boost-test$bloom_doy)**2) # test mse = 4.77
+
+###########################
+# 2011 prediction results #
+###########################
+
+# d=1, test mse=4.77
+# d=2, test mse=4.13
+# d=3, test mse=5.96
+# d=4, test mse=5.94
+
+# d=1 with sunlight vars, test mse=4.92
+# d=2 with sunlight vars, test mse=4.16
+# d=3 with sunlight vars, test mse=4.96
+# d=4 with sunlight vars, test mse=5.05
+
+
+#Iterate from 2011-2021
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results_V4 <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+set.seed(634)
+for(i in 2010:2020){
+  
+  train <- df_final %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  test <- df_final %>% filter(year == i + 1, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+  
+  test.imputed <- train.imputed %>% bind_rows(test)
+  test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+  test.imputed <- test.imputed %>% filter(year== i + 1)
+  
+  boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                      shrinkage = 0.001)
+  
+  predictions <- predict(boost.cherry, newdata = test.imputed) %>% 
+    bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
+  
+  #Kyoto
+  Results_V4[c,1] <- "kyoto"
+  Results_V4[c,2] <- i+1
+  Results_V4[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results_V4[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results_V4[c+1,1] <- "liestal"
+  Results_V4[c+1,2] <- i+1
+  Results_V4[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results_V4[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  #Washington DC
+  Results_V4[c+2,1] <- "washingtondc"
+  Results_V4[c+2,2] <- i+1
+  Results_V4[c+2,3] <- predictions$bloom_doy[predictions$location=="washingtondc"]
+  Results_V4[c+2,4] <- predictions$predicted_doy[predictions$location=="washingtondc"]
+  
+  c<-c+3
+  
+}
+
+Results_V4<-data.frame(Results_V4)
+colnames(Results_V4) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results_V4$Observed_bloom_doy <- as.numeric(Results_V4$Observed_bloom_doy)
+Results_V4$Predicted <- round(as.numeric(Results_V4$Predicted),2)
+
+Results_V4 <- Results_V4 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) %>%
+  arrange(Year, Location)
+
+Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
+
+sum(Results_V4$Abs_diff) # 104.87 (seed 634)
 
 ############################
 # GAM model and evaluation #
