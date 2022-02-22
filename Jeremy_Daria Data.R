@@ -155,4 +155,3 @@ df_final <- historic_data %>% full_join(sunlight, by = c("location", "year")) %>
 df_final %>% group_by(location) %>% summarise(initial_year = min(year), final_year = max(year))
 
 djdata<- full_join(df_final, temp_all_hot_cold, by= c("year", "location")) 
-
