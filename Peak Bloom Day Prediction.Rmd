@@ -1,8 +1,0 @@
----
-title: "Peak Bloom Day Prediction"
-author: "Daria Kearney"
-date: "2/21/2022"
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
