@@ -14,7 +14,7 @@ get_tmax<- function (stationid) {
                date_min = "1950-01-01", date_max = "2020-12-31")[[1]]}%>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
   group_by(date) %>%
-  summarize(tmax)
+  summarise(tmax)
 
 #Get all four location for 1950-2020
 days_max<-
@@ -29,7 +29,7 @@ get_tmin<- function (stationid) {
                date_min = "1950-01-01", date_max = "2020-12-31")[[1]]}%>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
   group_by(date) %>%
-  summarize(tmin) 
+  summarise(tmin) 
 
 #Get all four location for 1950-2020
 days_min<-
