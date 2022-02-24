@@ -50,15 +50,16 @@ tempall$cold<- ifelse(tempall$tavg <= -115, 1, 0)
 #Creating binary variable label "warm" for when average temperature is <= 100(1/10 °C)=> 50°F
 tempall$hot<- ifelse(tempall$tavg >= 100, 1, 0)
 
-#Getting the data for just Nov, Dec, Jan, & Feb
-temp_all_hot_cold<-subset(tempall, format(date, "%m") %in% c("01", "02", "11", "12"))
+#Getting the data for just Nov, Dec, Jan, Feb, March, & April
+temp_all_hot_cold<-subset(tempall, format(date, "%m") %in% c("01", "02", "03", "04", "11", "12"))
 
 #Creating new variable of the sum of days that meet the requirement above & 
 #grouping them in Spring & Winter so I can aggregate the date
 temp_all_hot_cold<- temp_all_hot_cold %>%
   mutate(month = as.integer(format(date, "%m"))) %>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
-  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
+  mutate(seasons= ifelse(month %in% c(2, 3, 4), "Spring", "Winter")) %>%
+  mutate(year= ifelse(month >= 11, year+1, year )) %>%
   group_by(year, seasons, location) %>%
   mutate(cold= sum(cold, na.rm = TRUE)) %>%
   mutate(hot= sum(hot, na.rm = TRUE)) %>%
