@@ -89,9 +89,9 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 
 #Observing general multiple linear regression model
 #Merging bloom days for the three locations note: takes away Vancouver days
-cherry <- read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.washingtondc.csv") %>% 
-  bind_rows(read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.liestal.csv")) %>% 
-  bind_rows(read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.kyoto.csv"))
+cherry <- read.csv("data/washingtondc.csv") %>% 
+  bind_rows(read.csv("data/liestal.csv")) %>% 
+  bind_rows(read.csv("data/kyoto.csv"))
 
 cherrytembin<- merge(cherry, temp_all_hot_cold, by= c("location", "year"))
 
@@ -190,7 +190,7 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Liestal        1953-2022             1894-2021
 # Washington DC  1948-2021             1921-2021
 # Vancouver      1957-2022             N/A
-sunlight <- read.csv(file.choose())
+sunlight <- read.csv("data/avg daily sunlight_dc and whatcom county wa.csv")
 
 sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
                                 year = ifelse(Month.Code==12, year_raw+1, year_raw)) %>%
