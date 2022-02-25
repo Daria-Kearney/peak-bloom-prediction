@@ -206,3 +206,68 @@ df_final <- historic_data %>% full_join(sunlight, by = c("location", "year")) %>
 df_final %>% group_by(location) %>% summarise(initial_year = min(year), final_year = max(year))
 
 djdata<- full_join(df_final, temp_all_hot_cold, by= c("year", "location")) 
+
+############################################################################################################
+############################################################################################################
+################################################################################################################################################
+#Extrapolate for Average Temperature 
+#Exploratory Data Analysis
+#Looking at distribution for 4 locations for for the two seasons from 2000-2020
+#Rough Draft
+#Checking normality
+library(ggplot2)
+################################################################################
+##############################################################################
+##########################################################################################
+#Graph
+#fix graph but looking at distribution
+#Looking at 2020 for locations and split by seasons
+temp_exp %>% filter(year>= 2020) %>%
+  ggplot(aes(x= tavg)) + 
+  geom_histogram(aes(fill=seasons))+
+  facet_wrap(~location + seasons)
+
+#Use the example to look at the average temp in the for the 3 locations for the seasons
+
+#Look at 2019-2020 for locations and split by seasons
+#Checking normality
+temp_exp %>% filter(year>= 2019) %>%
+  ggplot(aes(x= tavg)) + 
+  geom_histogram(aes(fill=seasons))+
+  facet_wrap(~location + seasons + year)
+
+#Look at all years for different locations and seasons
+
+temp_exp %>% filter() %>%
+  ggplot(aes(x= tavg)) + 
+  geom_histogram(aes(fill=seasons))+
+  facet_wrap(~location + seasons)
+
+#QQ plot for all locations separate
+temp_exp %>% filter(location=="washingtondc")%>%
+  ggplot(aes(sample= tavg, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()
+temp_exp %>% filter(location=="kyoto")%>%
+  ggplot(aes(sample= tavg, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()
+temp_exp %>% filter(location=="liestal")%>%
+  ggplot(aes(sample= tavg, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()
+temp_exp %>% filter(location=="vancouver")%>%
+  ggplot(aes(sample= tavg, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()
+
+#All QQ plots for all 4 locations
+temp_exp %>%
+  ggplot(aes(sample= tavg, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()+
+  facet_wrap(~location)
+
+################################################################################
+################################################################################
+################################################################################
