@@ -6,6 +6,7 @@
 library(dplyr)
 library(rnoaa)
 library(tidyverse)
+library(ggplot2)
 stations <- ghcnd_stations()
 
 #Getting tmax data for 1950-2021
