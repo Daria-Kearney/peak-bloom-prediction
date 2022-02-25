@@ -8,10 +8,10 @@ library(rnoaa)
 library(tidyverse)
 stations <- ghcnd_stations()
 
-#Getting tmax data for 1950-2020
+#Getting tmax data for 1950-2021
 get_tmax<- function (stationid) {
   ghcnd_search(stationid = stationid, var = c("tmax"), 
-               date_min = "1950-01-01", date_max = "2020-12-31")[[1]]}%>%
+               date_min = "1950-01-01", date_max = "2021-02-28")[[1]]}%>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
   group_by(date) %>%
   summarise(tmax)
@@ -26,7 +26,7 @@ days_max<-
 #Getting tmin data for 1950-2020
 get_tmin<- function (stationid) {
   ghcnd_search(stationid = stationid, var = c("tmin"), 
-               date_min = "1950-01-01", date_max = "2020-12-31")[[1]]}%>%
+               date_min = "1950-01-01", date_max = "2021-02-28")[[1]]}%>%
   mutate(year = as.integer(format(date, "%Y"))) %>%
   group_by(date) %>%
   summarise(tmin) 
@@ -89,9 +89,9 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 
 #Observing general multiple linear regression model
 #Merging bloom days for the three locations note: takes away Vancouver days
-cherry <- read.csv("data/washingtondc.csv") %>% 
-  bind_rows(read.csv("data/liestal.csv")) %>% 
-  bind_rows(read.csv("data/kyoto.csv"))
+cherry <- read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.washingtondc.csv") %>% 
+  bind_rows(read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.liestal.csv")) %>% 
+  bind_rows(read.csv("/Users/dariakearney/Documents/Masters/Spring 2022/STAT 634/PB NOT COPIED/ex.peak-bloom-prediction-main/ex.data/ex.kyoto.csv"))
 
 cherrytembin<- merge(cherry, temp_all_hot_cold, by= c("location", "year"))
 
@@ -192,7 +192,6 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Vancouver      1957-2022             N/A
 sunlight <- read.csv(file.choose())
 
-
 sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
                                 year = ifelse(Month.Code==12, year_raw+1, year_raw)) %>%
   group_by(location, year, month) %>%
@@ -212,6 +211,7 @@ djdata<- full_join(df_final, temp_all_hot_cold, by= c("year", "location"))
 ################################################################################################################################################
 #Extrapolate for Average Temperature 
 #Exploratory Data Analysis
+#Daria's Data/R Code
 #Looking at distribution for 4 locations for for the two seasons from 2000-2020
 #Checking normality
 library(ggplot2)
@@ -273,8 +273,7 @@ temp_exp %>%
 
 #Monte Carlo Simulation
 #Look at tempavg for 1950-2020
-temp_exp<- temp_all_hot_cold
-
+#Use old data set created earlier "temp_exp"
 #Getting mean and sd for all locations and seasons
 tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), mean, na.rm= TRUE)
 tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), sd, na.rm= TRUE)
@@ -289,7 +288,7 @@ tapply(K$tavg, list(K$seasons), sd, na.rm= TRUE)
 
 #Making the extended dates from 2021 to 2032 
 #2021-01-01 to 2032-02-28
-date<- seq(as.Date("2021-01-01"), as.Date("2032-02-28"), by="days")
+date<- seq(as.Date("2021-11-01"), as.Date("2032-02-28"), by="days")
 
 pK<- K %>%
   rbind(tibble(location = "koyto", date= date))
@@ -302,7 +301,7 @@ pK<- pK %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 95.25329, 38.33412), rnorm(600, 48.58070, 26.22936))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 95.25329, 38.33412), rnorm(600, 48.68257, 26.33392))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -332,7 +331,7 @@ pW<- pW %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 63.29276, 55.06767), rnorm(600, 22.83031, 53.82707))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 63.29276, 55.06767), rnorm(600, 22.91252, 53.55849))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -362,7 +361,7 @@ pV<- pV %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 50.3244, 35.42224), rnorm(600, 42.3845, 33.12227))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 50.3244, 35.42224), rnorm(600, 42.26994, 33.06787))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -392,7 +391,7 @@ pL<- pL %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 42.2366, 40.99472), rnorm(600, 23.00779, 44.09657))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 42.2366, 40.99472), rnorm(600, 23.2087, 44.18243))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -408,7 +407,7 @@ pL<- pL %>%
 
 #selecting important data
 Extrapolation<- rbind(pK, pL, pW, pV) %>%
-  filter(date>="2021-01-01") %>%
+  filter(date>="2021-11-01") %>%
   select("location", "year", "seasons", "coldp", "hotp") %>%
   group_by(year) %>%
   group_by(location, year, seasons) %>% summarize_all(list(~toString(unique(.))))
@@ -427,3 +426,14 @@ Extrapolation= aggregate(. ~ year + location, data = Extrapolation, FUN= sum)
 ##################################################################################
 ##################################################################################
 ##################################################################################
+##########Combine the data#######################################################
+#Combing my data set together
+#My Predicted data and hot and cold variables with year, location
+Extrapolation<- Extrapolation %>%
+  mutate(cold = coldp, hot = hotp) %>%
+  select(-c("coldp", "hotp"))
+
+Comp<- bind_rows(temp_all_hot_cold, Extrapolation)
+
+#Combine my data and Jeremy's df_final
+DJData<- full_join(df_final, Comp, by= c("year", "location"))
