@@ -163,7 +163,7 @@ get_climatedata <- function (stationid) {
                                     labels = c("Winter", "Spring", "Summer", "Fall")),
                        year = if_else(month == 0, year + 1L, year)) %>%
     group_by(year, month) %>%
-    summarize(tmax_avg = mean(tmax, na.rm = TRUE),
+    summarise(tmax_avg = mean(tmax, na.rm = TRUE),
               tmin_avg = mean(tmin, na.rm = TRUE),
               prcp_avg = mean(prcp, na.rm = TRUE),
               prcp_tot = sum(prcp, na.rm = TRUE),
