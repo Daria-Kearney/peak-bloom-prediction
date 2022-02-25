@@ -95,7 +95,7 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Vancouver      1957-2022             N/A
 
 
-sunlight <- read.csv(file.choose())
+sunlight <- read.csv("data/avg daily sunlight_dc and whatcom county wa.csv")
 str(sunlight)
 head(sunlight[sunlight$Month.Code==12,])
 sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
@@ -134,7 +134,7 @@ historic_temperatures %>%
   aes(year, tmax_avg) + 
   geom_line() +
   xlim(1950, 2031) +
-  labs(x = "Year", y = "Average maximum temperature (1/10 °C)") +
+  labs(x = "Year", y = "Average maximum temperature (1/10 ?C)") +
   facet_grid(factor(season) ~ str_to_title(location))
 
 #Sunlight only looks promising for March
