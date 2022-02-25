@@ -213,12 +213,11 @@ djdata<- full_join(df_final, temp_all_hot_cold, by= c("year", "location"))
 #Extrapolate for Average Temperature 
 #Exploratory Data Analysis
 #Looking at distribution for 4 locations for for the two seasons from 2000-2020
-#Rough Draft
 #Checking normality
 library(ggplot2)
 ################################################################################
-##############################################################################
-##########################################################################################
+################################################################################
+################################################################################
 #Graph
 #fix graph but looking at distribution
 #Looking at 2020 for locations and split by seasons
@@ -271,3 +270,160 @@ temp_exp %>%
 ################################################################################
 ################################################################################
 ################################################################################
+
+#Monte Carlo Simulation
+#Look at tempavg for 1950-2020
+temp_exp<- temp_all_hot_cold
+
+#Getting mean and sd for all locations and seasons
+tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), mean, na.rm= TRUE)
+tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), sd, na.rm= TRUE)
+
+########################
+#######Kyoto############
+
+#Taking a subset of just kyoto and getting mean and sd for kyoto
+K<- temp_exp %>% filter(location=="kyoto")
+tapply(K$tavg, list(K$seasons), mean, na.rm= TRUE)
+tapply(K$tavg, list(K$seasons), sd, na.rm= TRUE)
+
+#Making the extended dates from 2021 to 2032 
+#2021-01-01 to 2032-02-28
+date<- seq(as.Date("2021-01-01"), as.Date("2032-02-28"), by="days")
+
+pK<- K %>%
+  rbind(tibble(location = "koyto", date= date))
+
+#creating temp avg for all years grouped by season for kyoto 
+set.seed(123)
+pK<- pK %>%
+  mutate(month = as.integer(format(date, "%m"))) %>%
+  mutate(year = as.integer(format(date, "%Y"))) %>%
+  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
+  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
+  mutate(year= ifelse(month >= 11, year+1, year )) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 95.25329, 38.33412), rnorm(600, 48.58070, 26.22936))) %>%
+  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
+  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
+  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
+  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
+  group_by(year, seasons, location) %>%
+  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
+  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
+  mutate(cold= sum(cold, na.rm = TRUE)) %>%
+  mutate(hot= sum(hot, na.rm = TRUE))
+
+###############################
+#######WashingtonDC############
+
+#Taking a subset of just WashingtonDC and getting mean and sd of tempavg
+W<- temp_exp %>% filter(location=="washingtondc")
+tapply(W$tavg, list(W$seasons), mean, na.rm= TRUE)
+tapply(W$tavg, list(W$seasons), sd, na.rm= TRUE)
+
+pW<- W %>%
+  rbind(tibble(location = "washingtondc", date= date))
+
+#Creating temp avg for all years grouped by season for Washingtondc.
+set.seed(123)
+pW<- pW %>%
+  mutate(month = as.integer(format(date, "%m"))) %>%
+  mutate(year = as.integer(format(date, "%Y"))) %>%
+  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
+  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
+  mutate(year= ifelse(month >= 11, year+1, year )) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 63.29276, 55.06767), rnorm(600, 22.83031, 53.82707))) %>%
+  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
+  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
+  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
+  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
+  group_by(year, seasons, location) %>%
+  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
+  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
+  mutate(cold= sum(cold, na.rm = TRUE)) %>%
+  mutate(hot= sum(hot, na.rm = TRUE))
+
+###############################
+#######Vancouver###############
+
+#Taking a subset of just Vancouver 
+V<- temp_exp %>% filter(location=="vancouver")
+tapply(V$tavg, list(V$seasons), mean, na.rm= TRUE)
+tapply(V$tavg, list(V$seasons), sd, na.rm= TRUE)
+
+pV<- V %>%
+  rbind(tibble(location = "vancouver", date= date))
+
+#Creating temp avg for all years grouped by season for Vancouver.
+set.seed(123)
+pV<- pV %>%
+  mutate(month = as.integer(format(date, "%m"))) %>%
+  mutate(year = as.integer(format(date, "%Y"))) %>%
+  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
+  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
+  mutate(year= ifelse(month >= 11, year+1, year )) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 50.3244, 35.42224), rnorm(600, 42.3845, 33.12227))) %>%
+  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
+  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
+  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
+  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
+  group_by(year, seasons, location) %>%
+  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
+  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
+  mutate(cold= sum(cold, na.rm = TRUE)) %>%
+  mutate(hot= sum(hot, na.rm = TRUE))
+
+###############################
+#######Liestal#################
+
+#Taking a subset of just Liestal
+L<- temp_exp %>% filter(location=="liestal")
+tapply(L$tavg, list(L$seasons), mean, na.rm= TRUE)
+tapply(L$tavg, list(L$seasons), sd, na.rm= TRUE)
+
+pL<- L %>%
+  rbind(tibble(location = "liestal", date= date))
+
+#Creating temp avg for all years grouped by season for Liestal.
+set.seed(123)
+pL<- pL %>%
+  mutate(month = as.integer(format(date, "%m"))) %>%
+  mutate(year = as.integer(format(date, "%Y"))) %>%
+  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
+  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
+  mutate(year= ifelse(month >= 11, year+1, year )) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(600, 42.2366, 40.99472), rnorm(600, 23.00779, 44.09657))) %>%
+  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
+  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
+  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
+  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
+  group_by(year, seasons, location) %>%
+  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
+  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
+  mutate(cold= sum(cold, na.rm = TRUE)) %>%
+  mutate(hot= sum(hot, na.rm = TRUE))
+
+################################################
+#######Extrapolation Data Condensed#############
+
+#selecting important data
+Extrapolation<- rbind(pK, pL, pW, pV) %>%
+  filter(date>="2021-01-01") %>%
+  select("location", "year", "seasons", "coldp", "hotp") %>%
+  group_by(year) %>%
+  group_by(location, year, seasons) %>% summarize_all(list(~toString(unique(.))))
+
+#Erasing season variable
+Extrapolation<- subset(Extrapolation, select = -c(seasons))
+
+#Transforming cold and hot to numeric so I can aggregate
+Extrapolation<-transform(Extrapolation, coldp= as.numeric(coldp), hotp= as.numeric(hotp))
+str(Extrapolation)
+
+#Aggregating data so that it is by location and have just one row for each year for all locations
+Extrapolation= aggregate(. ~ year + location, data = Extrapolation, FUN= sum)
+
+##################################################################################
+##################################################################################
+##################################################################################
+##################################################################################
