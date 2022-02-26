@@ -302,7 +302,7 @@ pK<- pK %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 95.25329, 38.33412), rnorm(600, 48.68257, 26.33392))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(1200, 95.25329, 38.33412), rnorm(1200, 48.68257, 26.33392))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -332,7 +332,7 @@ pW<- pW %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 63.29276, 55.06767), rnorm(600, 22.91252, 53.55849))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(1200, 63.29276, 55.06767), rnorm(1200, 22.91252, 53.55849))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -362,7 +362,7 @@ pV<- pV %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 50.3244, 35.42224), rnorm(600, 42.26994, 33.06787))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(1200, 50.3244, 35.42224), rnorm(1200, 42.26994, 33.06787))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
@@ -392,7 +392,7 @@ pL<- pL %>%
   subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
   mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
   mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(600, 42.2366, 40.99472), rnorm(600, 23.2087, 44.18243))) %>%
+  mutate(tp= ifelse(month >= 11, rnorm(1200, 42.2366, 40.99472), rnorm(1200, 23.2087, 44.18243))) %>%
   mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
   mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
   mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
