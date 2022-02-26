@@ -3,10 +3,8 @@
 ################################################################################################################################################
 #Daria's Data Set
 #Creating data set for Cold and Warm Buckets- Daria
-library(dplyr)
 library(rnoaa)
 library(tidyverse)
-library(ggplot2)
 stations <- ghcnd_stations()
 
 #Getting tmax data for 1950-2021
