@@ -268,171 +268,198 @@ temp_exp %>%
 
 ################################################################################
 ################################################################################
+########################            Extrapolation            ###################
 ################################################################################
+################################################################################
+#Predicting the average temperature and then using that to predict the hot and cold variables
+temp_exp<- temp_exp %>%
+  group_by(year, location, seasons) %>%
+  summarise(avgt= mean(tavg, na.rm = TRUE))
 
-#Monte Carlo Simulation
-#Look at tempavg for 1950-2020
-#Use old data set created earlier "temp_exp"
-#Getting mean and sd for all locations and seasons
-tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), mean, na.rm= TRUE)
-tapply(temp_exp$tavg, list(temp_exp$location, temp_exp$seasons), sd, na.rm= TRUE)
+#Using a data sets from temp_all_hot
+tempseas<-transform(tempseas, cold= as.numeric(cold), hot= as.numeric(hot))
 
-########################
-#######Kyoto############
+#Merge the two data sets
+complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
 
-#Taking a subset of just kyoto and getting mean and sd for kyoto
-K<- temp_exp %>% filter(location=="kyoto")
-tapply(K$tavg, list(K$seasons), mean, na.rm= TRUE)
-tapply(K$tavg, list(K$seasons), sd, na.rm= TRUE)
 
+#####     Predicting average temperature     ######
+ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
+summary(ls_fit)
+
+#RSS
+deviance(ls_fit) #132963
+#MSE
+mean(ls_fit$residuals^2) #263
+#AIC
+AIC(ls_fit) #4260.21
+predict(ls_fit, newdata= complete)
+
+######  Predicting hot variable given the predicted average temperature  #########
+#Best Multiple Linear Regression
+#R^2= .4071
+ls_hot<- lm(hot~ avgt + location + seasons * I(year^2), data = complete)
+summary(ls_hot)
+
+#RSS
+deviance(ls_hot) #1578.318
+#MSE
+mean(ls_hot$residuals^2) #3.131
+#AIC
+AIC(ls_hot) #2023
+predict(ls_hot, newdata= complete)
+################################################################################################
+################################################################################################
+######     Plot predicted vs actual for average temperature for each location      #######
+predict<- complete %>% 
+  bind_cols(predicted_avgt = round(predict(ls_fit, newdata= complete)))
+
+#Grouped by locations and seasons predicted vs actual for average temperature
+predict %>%
+  ggplot(aes(x = year, y=predicted_avgt)) +
+  geom_line()+ 
+  geom_point(aes(y=avgt)) +
+  facet_grid(factor(seasons) ~ str_to_title(location))+
+  labs(x = "Year", y = "Average Temperature")
+
+#################################################################################
+#################################################################################
+## Use the predicted average temperature from lm to predict the hot variable ####
+ls_hot<- lm(hot~ avgt + location + seasons * I(year^2), data = complete)
+summary(ls_hot) #R^2 = .4071
+predict(ls_hot, newdata= complete)
+
+#######
+#When using "predicted_avgt" in the linear regression R^2 doesn't reduce by much
+ls_hotp<- lm(hot~ predicted_avgt + location + seasons * I(year^2), data = predict)
+summary(ls_hotp) #R^2 = .365
+#RSS
+deviance(ls_hotp) #1690.574
+#MSE
+mean(ls_hotp$residuals^2) #3.3543
+#AIC
+AIC(ls_hotp) #2058
+#################################################################################
+#################################################################################
+## Using the predicted average temperature to see how it differs from true temp #
+pred.hot<- predict %>% 
+  bind_cols(predicted_hot = round(predict(ls_hotp, newdata= predict)))
+
+# Scatter plot of the actual hot and predicted hot variable using the predicted average temp.
+pred.hot %>%
+  filter(seasons=="Spring") %>%
+  ggplot(aes(x = year, y=predicted_hot)) +
+  geom_line()+ 
+  geom_point(aes(y=hot)) +
+  facet_grid(cols = vars(str_to_title(location)))+
+  labs(x = "Year", y = "Number of Days (Hot)")
+
+#######    Using the the actual average temp to see how it differs   ######### 
+pred.hot.avg<- predict %>% 
+  bind_cols(predicted_hot = round(predict(ls_hot, newdata= predict)))
+
+#Scatter plot of the actual hot and predicted hot variable using the actual average temp.
+pred.hot.avg %>%
+  filter(seasons=="Spring") %>%
+  ggplot(aes(x = year, y=predicted_hot)) +
+  geom_line()+ 
+  geom_point(aes(y=hot)) +
+  facet_grid(cols = vars(str_to_title(location)))+
+  labs(x = "Year", y = "Number of Days (Hot)")
+
+################################################################################
+##Plotting all the 3 line graph for the predicted and actual number of hot days#
+#Using the actual average temperature
+hot.avg<- complete %>%
+  bind_cols(predhot.avg=round(predict(ls_hot, newdata= complete)))
+
+#Using the predicted average temperature
+hot.pred<- predict %>%
+  bind_cols(predavg.predhot=round(predict(ls_hotp, newdata= predict)))
+
+rm(AllHot)
+
+#Getting all the hot values into one data frame
+AllHot<- subset(hot.avg, select= predhot.avg) %>%
+  bind_cols(hot.pred)
+
+#Comparing the different hot variables for predicting
+AllHot %>%
+  filter(seasons=="Spring") %>%
+  ggplot(aes(x = year)) + 
+  geom_line(aes(y =hot, color= "actual")) +
+  geom_line(aes(y= predhot.avg, color ="pred hot"))+
+  geom_line(aes(y= predavg.predhot, color ="predict hot/ pred. temp")) + 
+  facet_grid(vars(str_to_title(location)))+
+  labs(x = "Year", y = "Number of Days")
+
+##################################################################################
+##################################################################################
+######  Predicting cold variable in a multiple linear  #########
+ls_fitcold<- lm(cold~ I(year>=1975)*I(location== "liestal")+ seasons, data = complete)
+summary(ls_fitcold) #R^2=.02543
+round(predict(ls_fitcold, newdata = comp))
+
+##################################################################################
+##################################################################################
+#Putting together the predicted and full data set
 #Making the extended dates from 2021 to 2032 
-#2021-01-01 to 2032-02-28
-date<- seq(as.Date("2021-11-01"), as.Date("2032-02-28"), by="days")
 
-pK<- K %>%
-  rbind(tibble(location = "koyto", date= date))
+complete <- complete %>%
+  bind_rows(tibble(location = "kyoto", year= 2022:2032, seasons = "Winter")) %>%
+  bind_rows(tibble(location = "kyoto", year= 2022:2032, seasons = "Spring")) %>%
+  bind_rows(tibble(location = "liestal", year= 2022:2032, seasons = "Winter")) %>%
+  bind_rows(tibble(location = "liestal", year= 2022:2032, seasons = "Spring")) %>%
+  bind_rows(tibble(location = "vancouver", year= 2022:2032, seasons = "Winter"))%>%
+  bind_rows(tibble(location = "vancouver", year= 2022:2032, seasons = "Spring")) %>%
+  bind_rows(tibble(location = "washingtondc", year= 2022:2032, seasons = "Winter")) %>%
+  bind_rows(tibble(location = "washingtondc", year= 2022:2032, seasons = "Spring"))
 
-#creating temp avg for all years grouped by season for kyoto 
-set.seed(123)
-pK<- pK %>%
-  mutate(month = as.integer(format(date, "%m"))) %>%
-  mutate(year = as.integer(format(date, "%Y"))) %>%
-  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
-  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
-  mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(1200, 95.25329, 38.33412), rnorm(1200, 48.68257, 26.33392))) %>%
-  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
-  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
-  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
-  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
-  group_by(year, seasons, location) %>%
-  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
-  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
-  mutate(cold= sum(cold, na.rm = TRUE)) %>%
-  mutate(hot= sum(hot, na.rm = TRUE))
+#Predicted average temp and combining data set for prediction for 2022-2032
+DF<- complete %>%
+  bind_cols(pavgt=(predict(ls_fit, newdata= complete)))
 
-###############################
-#######WashingtonDC############
+#Creating lm using 1950-2020 avg. temp and then predicting using predicted avg. temp
+DF<- DF %>%
+  mutate(tavg = avgt) %>%
+  mutate(avgt = pavgt) %>%
+  bind_cols(phot=(predict(ls_hot, newdata = .)))
 
-#Taking a subset of just WashingtonDC and getting mean and sd of tempavg
-W<- temp_exp %>% filter(location=="washingtondc")
-tapply(W$tavg, list(W$seasons), mean, na.rm= TRUE)
-tapply(W$tavg, list(W$seasons), sd, na.rm= TRUE)
+#######################################
+#Cold Prediction
 
-pW<- W %>%
-  rbind(tibble(location = "washingtondc", date= date))
-
-#Creating temp avg for all years grouped by season for Washingtondc.
-set.seed(123)
-pW<- pW %>%
-  mutate(month = as.integer(format(date, "%m"))) %>%
-  mutate(year = as.integer(format(date, "%Y"))) %>%
-  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
-  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
-  mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(1200, 63.29276, 55.06767), rnorm(1200, 22.91252, 53.55849))) %>%
-  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
-  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
-  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
-  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
-  group_by(year, seasons, location) %>%
-  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
-  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
-  mutate(cold= sum(cold, na.rm = TRUE)) %>%
-  mutate(hot= sum(hot, na.rm = TRUE))
-
-###############################
-#######Vancouver###############
-
-#Taking a subset of just Vancouver 
-V<- temp_exp %>% filter(location=="vancouver")
-tapply(V$tavg, list(V$seasons), mean, na.rm= TRUE)
-tapply(V$tavg, list(V$seasons), sd, na.rm= TRUE)
-
-pV<- V %>%
-  rbind(tibble(location = "vancouver", date= date))
-
-#Creating temp avg for all years grouped by season for Vancouver.
-set.seed(123)
-pV<- pV %>%
-  mutate(month = as.integer(format(date, "%m"))) %>%
-  mutate(year = as.integer(format(date, "%Y"))) %>%
-  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
-  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
-  mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(1200, 50.3244, 35.42224), rnorm(1200, 42.26994, 33.06787))) %>%
-  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
-  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
-  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
-  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
-  group_by(year, seasons, location) %>%
-  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
-  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
-  mutate(cold= sum(cold, na.rm = TRUE)) %>%
-  mutate(hot= sum(hot, na.rm = TRUE))
-
-###############################
-#######Liestal#################
-
-#Taking a subset of just Liestal
-L<- temp_exp %>% filter(location=="liestal")
-tapply(L$tavg, list(L$seasons), mean, na.rm= TRUE)
-tapply(L$tavg, list(L$seasons), sd, na.rm= TRUE)
-
-pL<- L %>%
-  rbind(tibble(location = "liestal", date= date))
-
-#Creating temp avg for all years grouped by season for Liestal.
-set.seed(123)
-pL<- pL %>%
-  mutate(month = as.integer(format(date, "%m"))) %>%
-  mutate(year = as.integer(format(date, "%Y"))) %>%
-  subset(format(date, "%m") %in% c("01", "02","11", "12")) %>%
-  mutate(seasons= ifelse(month < 11, "Spring", "Winter")) %>%
-  mutate(year= ifelse(month >= 11, year+1, year )) %>%
-  mutate(tp= ifelse(month >= 11, rnorm(1200, 42.2366, 40.99472), rnorm(1200, 23.2087, 44.18243))) %>%
-  mutate(cold = ifelse(tavg <= -115, 1, 0)) %>%
-  mutate(hot = ifelse(tavg >= 100, 1, 0)) %>%
-  mutate(coldp = ifelse(tp <= -115, 1, 0)) %>%
-  mutate(hotp = ifelse(tp >= 100, 1, 0)) %>%
-  group_by(year, seasons, location) %>%
-  mutate(coldp= sum(coldp, na.rm = TRUE)) %>%
-  mutate(hotp= sum(hotp, na.rm = TRUE)) %>%
-  mutate(cold= sum(cold, na.rm = TRUE)) %>%
-  mutate(hot= sum(hot, na.rm = TRUE))
-
-################################################
-#######Extrapolation Data Condensed#############
-
-#selecting important data
-Extrapolation<- rbind(pK, pL, pW, pV) %>%
-  filter(date>="2021-11-01") %>%
-  select("location", "year", "seasons", "coldp", "hotp") %>%
-  group_by(year) %>%
-  group_by(location, year, seasons) %>% summarize_all(list(~toString(unique(.))))
-
-#Erasing season variable
-Extrapolation<- subset(Extrapolation, select = -c(seasons))
-
-#Transforming cold and hot to numeric so I can aggregate
-Extrapolation<-transform(Extrapolation, coldp= as.numeric(coldp), hotp= as.numeric(hotp))
-str(Extrapolation)
-
-#Aggregating data so that it is by location and have just one row for each year for all locations
-Extrapolation= aggregate(. ~ year + location, data = Extrapolation, FUN= sum)
+DF<- DF %>%
+  bind_cols(pcold=(predict(ls_fitcold, newdata= DF)))
 
 ##################################################################################
 ##################################################################################
-##################################################################################
-##################################################################################
-##########Combine the data#######################################################
-#Combing my data set together
-#My Predicted data and hot and cold variables with year, location
-Extrapolation<- Extrapolation %>%
-  mutate(cold = coldp, hot = hotp) %>%
-  select(-c("coldp", "hotp"))
+###################################################################################
+###############       Combining Data         ####################################
+a<- subset(DF, select= c("location","year","seasons","tavg","cold","hot")) %>%
+  filter(year<=2021)
 
-Comp<- bind_rows(temp_all_hot_cold, Extrapolation)
+b<- DF %>%
+  mutate(pcold = ifelse(seasons == "Spring", is.na("pcold"), pcold)) %>%
+  mutate(phot = ifelse(seasons == "Winter", is.na("phot"), phot)) %>%
+  filter(year>2021)
 
-#Combine my data and Jeremy's df_final
-DJData<- full_join(df_final, Comp, by= c("year", "location"))
+b<- subset(b, select= c("location","year","seasons","pavgt","pcold","phot")) %>%
+  rename(hot = phot, cold= pcold, tavg= pavgt)
+
+predict<- bind_rows(a, b)
+
+predict<- subset(predict, select= -c(seasons))
+
+Predict<- predict %>%
+  group_by(location, year)%>%
+  mutate(tavg = mean(tavg), cold = sum(cold), hot= sum(hot))
+
+Predict<- Predict %>%
+  group_by(location, year) %>% summarize_all(list(~toString(unique(.)))) %>%
+  transform(cold= as.numeric(cold), hot= as.numeric(hot), tavg= as.numeric(tavg))
+
+djdata<- full_join(df_final, Predict, by= c("year", "location")) 
+
+################################################################################
+################################################################################
+###############################################################################
