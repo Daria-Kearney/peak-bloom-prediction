@@ -673,7 +673,6 @@ test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
 train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
 #rfImpute uses na.roughfix initally to impute using median/mode.
 
-
 #test.imputed <- rfImpute(bloom_doy~., data=test, mtry=10, ntree=500)
 #test.imputed <- rf.unsupervised(data.frame(test %>% select(-c("bloom_doy"))), n=3) # does not impute, needs full data?
 
@@ -817,7 +816,6 @@ mean((yhat.boost-test$bloom_doy)**2) # test mse = 4.77
 # d=2 with sunlight vars, test mse=4.16
 # d=3 with sunlight vars, test mse=4.96
 # d=4 with sunlight vars, test mse=5.05
-
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -963,7 +961,6 @@ mean(ls_hotp$residuals^2) #3.3543
 #AIC
 AIC(ls_hotp) #2058
 
-
 ####### Using Predicted Average Temp to Compare to Actual Average Temp.  ########
 
 pred.hot<- predict %>% 
@@ -1020,12 +1017,10 @@ AllHot %>%
   facet_grid(vars(str_to_title(location)))+
   labs(x = "Year", y = "Number of Days")
 
-
 ########  Predicting cold variable in a multiple linear regression  ############
 ls_fitcold<- lm(cold~ I(year>=1975)*I(location== "liestal")+ seasons, data = complete)
 summary(ls_fitcold) #R^2=.02543
 round(predict(ls_fitcold, newdata = comp))
-
 
 ##############  Combining the predicted and full data set  ####################
 #Making the extended dates from 2021 to 2032 
