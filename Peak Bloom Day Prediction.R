@@ -276,6 +276,7 @@ df_final %>%
   geom_step(linetype = 'dotted', color = 'gray50') +
   labs(x = "Sunlight in Mar (Kj/m^2)", y = "Peak bloom (days since Jan 1st)")
 
+############### Statistic Summaries ################
 cor(df_final$bloom_doy, df_final$sunlight_avg_0, use="complete.obs") # -0.27
 cor(df_final$bloom_doy, df_final$sunlight_avg_1, use="complete.obs") # -.32
 cor(df_final$bloom_doy, df_final$sunlight_avg_2, use="complete.obs") # -.07
@@ -454,12 +455,12 @@ cherrytembin<- select(cherrytembin, -c("alt", "lat", "long", "bloom_date"))
 
 #Fitting linear regression to see it's performance
 test_ls_fit<- lm(bloom_doy ~ year*location + cold + hot, data = cherrytembin)
-summary(test_ls_fit)
+summary(test_ls_fit) #R^2 = .324
 
 #RSS
-deviance(test_ls_fit) #9699.17
+deviance(test_ls_fit) #9699.71
 #MSE
-mean(test_ls_fit$residuals^2) #46.189
+mean(test_ls_fit$residuals^2) #46.19
 #AIC
 AIC(test_ls_fit) #1418.83
 #Performs better than demo
@@ -479,9 +480,9 @@ diff<- cherrytembin %>%
 print(diff)
 
 #Calculating the mean of the sum of the Absolute Difference for three locations between 1950-2020
-#The mean over the 70 years is 15.5 which performs better than demo
-mean(diff$sum)
-sum(diff$sum)
+#The mean over the 70 years is 15.26 which performs better than demo
+mean(diff$sum) #15.26
+sum(diff$sum) #167.9
 
 # Plot the predictions alongside the actual observations for 1950 up to 2020.
 cherrytembin %>% 
@@ -674,11 +675,11 @@ out1 %>% left_join(out2, by="Year") %>% mutate(difference=Total_diff_v1-Total_di
 #################
 
 train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
-  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date, cold)) %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
   mutate(location=factor(location))
 
 test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
-  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date, cold)) %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
   mutate(location=factor(location))
 
 #Impute missing data using randomForest and update with proximity calculations:
@@ -701,7 +702,7 @@ test.imputed <- test.imputed %>% filter(year==2011)
 yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
   bind_cols(test.imputed,predicted_doy=.)
 
-mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.70/8.18 for 2011
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 8.38 for 2011
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -784,8 +785,8 @@ Results_V3 <- Results_V3 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
 Results_V3 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 #write.csv(c(Results_V3), file = 'MAE_seed_634_sunlightdc.csv')
 
-sum(Results_V3$Abs_diff) # 125.68 (seed 634)
-#change results #121.01 (seed 635), 122.75 (seed 634)
+sum(Results_V3$Abs_diff) # 122.67 (seed 634)
+
 #####################
 # Gradient Boosting #
 #####################
@@ -814,7 +815,7 @@ summary(boost.cherry) # relative influence plot
 yhat.boost <- predict(boost.cherry, newdata = test.imputed)%>% 
   bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
 
-mean((yhat.boost-test$bloom_doy)**2) 
+mean((yhat.boost-test$bloom_doy)**2)
 
 # test mse = 4.77
 # test mse = 74.67 imputing all covariates in test set for 2011-2021
@@ -901,7 +902,7 @@ Results_V4 <- Results_V4 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
 Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 #write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
 
-sum(Results_V4$Abs_diff) # 104.87 (seed 634)
+sum(Results_V4$Abs_diff) # 104.23 (seed 634)
 
 #################################
 # Gradient Boosting with djdata #
@@ -938,6 +939,8 @@ for(i in 2010:2020){
   
   boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
                       shrinkage = 0.001)
+  
+  summary(boost.cherry) # relative influence plot
   
   predictions <- predict(boost.cherry, newdata = test.imputed) %>% 
     bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
@@ -995,7 +998,7 @@ Results_V5 <- Results_V5 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
 Results_V5 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 #write.csv(c(Results_V5), file = 'MAE_seed_634_boost_2272022.csv')
 
-sum(Results_V5$Abs_diff) 
+sum(Results_V5$Abs_diff) #100.61
 
 ###########################################################
 # test error with seed 634                                #
