@@ -111,10 +111,10 @@ sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
   pivot_wider(names_from = month, values_from = sunlight_avg, names_prefix = 'sunlight_avg_')
 
 df_final <- historic_data %>% full_join(sunlight, by = c("location", "year")) %>%
-  full_join(cherry, by=c("location", "year"))
+  full_join(cherry, by=c("location", "year", "bloom_date", "bloom_doy", "lat", "long", "alt"))
 
 df_final %>% group_by(location) %>% summarise(initial_year = min(year), final_year = max(year))
-write.csv(df_final, file = 'data_JF.csv')
+#write.csv(df_final, file = 'data_JF.csv')
 
 #Missing values by column
 sapply(df_final, function(x) sum(is.na(x)))
@@ -204,6 +204,9 @@ str(temp_all_hot_cold)
 
 #Aggregating data so that it is by location and have just one row for each year for all locations
 temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN= sum)
+
+#Joining df_final with hot and cold variables (temp_all_hot_cold)
+df_final<- full_join(df_final, temp_all_hot_cold, by= c("year", "location")) 
 
 #######################
 # Load EPA & NPN Data #
@@ -296,7 +299,7 @@ temp_exp %>% filter() %>%
 temp_exp %>% filter(year>= 2019) %>%
   ggplot(aes(x= tavg)) + 
   geom_histogram(aes(fill=seasons))+
-  facet_wrap(~location + seasons + year)
+  facet_wrap(~location + year)
 
 #All QQ plots for all 4 locations
 temp_exp %>%
@@ -345,7 +348,7 @@ pr.kyoto$rotation
 biplot(pr.kyoto,scale=0)
 pr.var.kyoto <- pr.kyoto$sdev^2
 pr.var.kyoto
-pve.kyoto <- pr.var/sum(pr.var.kyoto)
+pve.kyoto <- pr.var.kyoto/sum(pr.var.kyoto)
 pve.kyoto
 
 # Similar factpattern as the DC results
@@ -444,12 +447,11 @@ test_ls_fit<- lm(bloom_doy ~ year*location + cold + hot, data = cherrytembin)
 summary(test_ls_fit)
 
 #RSS
-sum(resid(test_ls_fit)^2)
-deviance(test_ls_fit)
+deviance(test_ls_fit) #9699.17
 #MSE
-mean(test_ls_fit$residuals^2)
+mean(test_ls_fit$residuals^2) #46.189
 #AIC
-AIC(test_ls_fit)
+AIC(test_ls_fit) #1418.83
 #Performs better than demo
 
 #Fitting it for the past predictions for 3 locations
@@ -772,7 +774,7 @@ Results_V3 <- Results_V3 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
 Results_V3 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 #write.csv(c(Results_V3), file = 'MAE_seed_634_sunlightdc.csv')
 
-sum(Results_V3$Abs_diff) # 121.01 (seed 635), 122.75 (seed 634)
+sum(Results_V3$Abs_diff) # 125.68 (seed 634)
 
 #####################
 # Gradient Boosting #
@@ -880,7 +882,7 @@ Results_V4 <- Results_V4 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
 Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
 
-sum(Results_V4$Abs_diff) # 104.87 (seed 634)
+sum(Results_V4$Abs_diff) # 104.03 (seed 634)
 
 ############################
 # GAM model and evaluation #
@@ -1079,7 +1081,9 @@ Predict<- Predict %>%
 
 ##################### Full Data Set with Forecasting ###########################
 
-djdata<- full_join(df_final, Predict, by= c("year", "location")) 
+df_final<- select(df_final, -c("cold", "hot"))
+
+complete_df<- full_join(df_final, Predict, by = c("year", "location"))
 
 ################################################################################
 ################################################################################
