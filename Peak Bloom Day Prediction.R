@@ -3,6 +3,7 @@
 ##########################
 
 library(tidyverse)
+library(lubridate)
 library(mgcv) # gam function for splines
 library(rnoaa)
 library(geosphere) # distm function for euclidean distance
@@ -11,6 +12,8 @@ library(missForest) # missForest()
 library(gbm) # gbm()
 library(xgboost) # xgb.train() and xgboost()
 library(Hmisc) #prcomp()
+library(astsa) #lag.1plot & #acf()
+library(dynlm)
 
 # Load data
 cherry <- read.csv("data/washingtondc.csv") %>% 
@@ -206,10 +209,6 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 # Load EPA & NPN Data #
 #######################
 
-phenomtrics <- read.csv("data/USA-NPN_individual_phenometrics_data.csv")
-intensity <- read.csv("data/USA-NPN_status_intensity_observations_data.csv")
-phenom_dict <- read.csv("data/USA-NPN_individual_phenometrics_datafield_descriptions.csv")
-int_dict <- read.csv("data/USA-NPN_status_intensity_datafield_descriptions.csv")
 EPA <- read.csv("data/combined_EPA_dataset.csv")
 
 #########################
@@ -306,14 +305,25 @@ temp_exp %>%
   stat_qq_line()+
   facet_wrap(~location)
 
+#Line Plot for years vs. bloom Day
+cherry %>% filter(year >= 1950) %>%
+  ggplot(aes(year,bloom_doy, color=location)) +
+  geom_line() +
+  labs(x="Year",
+       y="Days from January 1st",
+       title="Peak Bloom Dates (1950-2021)") +
+  theme_minimal()
+
 ########################################################
-# EPA Data Exploration- Principal Components Analysis  #
+#                EPA Data Exploration                  #
 ########################################################
 
 dc <- data1 %>% filter(location=="washingtondc")
 
 # Removing altitude since it is zero and can't be scaled
 dc1 <- select(dc,-c(location,alt))
+
+########  Principal Components Analysis ############
 
 #Principal Components Analysis for Washingtondc
 pr.dc <- prcomp(dc1,scale=TRUE)
@@ -365,7 +375,7 @@ predictions.epa <- data1 %>%
 
 par(mfrow=c(1,1))
 
-######### Scatter plot of predicted bloom day verus actual bloom day ###########
+######### Scatter plot of predicted bloom day versus actual bloom day ###########
 # Simple graph to see if high predicted values occur with high actual values
 
 predictions.epa %>% 
@@ -376,6 +386,48 @@ predictions.epa %>%
 
 # Predictive error
 mean(abs(predictions.epa$predicted_doy - predictions.epa$bloom_doy)/predictions.epa$bloom_doy)*100
+
+###################### Time Series Analysis #############################
+options(scipen = 100)
+# Estimating linear trend in all locations, prior to 2000 for forecasting
+kyoto <- dplyr::filter(cherry,location=="kyoto",year<2000)
+liestal <- dplyr::filter(cherry,location=="liestal",year<2000)
+dc <- dplyr::filter(cherry,location=="washingtondc", year<2000)
+
+kyoto_bloom <- ts(kyoto$bloom_doy,frequency=1)
+liestal_bloom <- ts(liestal$bloom_doy,frequency=1)
+dc_bloom <- ts(dc$bloom_doy,frequency=1)
+
+# Trend component for modeling
+trend_k <- time(kyoto_bloom)
+trend_l <- time(liestal_bloom)
+trend_dc <- time(dc_bloom)
+
+summary(tfit_k <- lm(kyoto_bloom ~ trend_k))
+summary(tfit_l <- lm(liestal_bloom ~ trend_l))
+summary(tfit_dc <- lm(dc_bloom ~ trend_dc))
+
+#### Plots for Time Series for all three locations ######
+
+plot(diff(kyoto_bloom), type="o")
+mean(diff(kyoto_bloom)) # drift estimate = .002
+acf(diff(dc_bloom), 48)
+
+plot(diff(liestal_bloom), type="o")
+mean(diff(liestal_bloom)) # drift estimate = -0.114
+acf(diff(liestal_bloom), 48)
+
+plot(diff(dc_bloom), type="o")
+mean(diff(dc_bloom)) # drift estimate = .205
+acf(diff(dc_bloom), 48)
+#All plots suggest lagged 1 variable is statistically significant 
+
+####### Scatter plot on lagged variables ########
+
+lag1.plot(kyoto_bloom,4)
+lag1.plot(liestal_bloom,4)
+lag1.plot(dc_bloom, 4)
+#Scatter plot on the lagged variables shows no influence of non-linear relationships
 
 ########################################################################
 # General Multiple Linear Regression Model for Hot and Cold Covariates #
@@ -398,7 +450,6 @@ deviance(test_ls_fit)
 mean(test_ls_fit$residuals^2)
 #AIC
 AIC(test_ls_fit)
-
 #Performs better than demo
 
 #Fitting it for the past predictions for 3 locations
