@@ -201,49 +201,6 @@ str(temp_all_hot_cold)
 #Aggregating data so that it is by location and have just one row for each year for all locations
 temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN= sum)
 
-########################################################################
-# General Multiple Linear Regression Model for Hot and Cold Covariates #
-########################################################################
-
-#Merging bloom days for the three locations
-cherrytembin<- merge(cherry, temp_all_hot_cold, by= c("location", "year"))
-
-#Getting rid of unnecessary variables
-cherrytembin<- select(cherrytembin, -c("alt", "lat", "long", "bloom_date"))
-
-#Fitting linear regression to see it's performance
-test_ls_fit<- lm(bloom_doy ~ year*location + cold + hot, data = cherrytembin)
-summary(test_ls_fit)
-
-#RSS
-sum(resid(test_ls_fit)^2)
-deviance(test_ls_fit)
-#MSE
-mean(test_ls_fit$residuals^2)
-#AIC
-AIC(test_ls_fit)
-
-#Performs better than demo
-
-#Fitting it for the past predictions for 3 locations
-cherrytembin<- cherrytembin %>% 
-  bind_cols(predicted_doy = predict(test_ls_fit, newdata= cherrytembin))
-
-#Calculating Absolute Difference for three locations between 1950-2020 getting the sums for 2011-2020
-diff<- cherrytembin %>%
-  group_by(year, location) %>%
-  mutate(absdiff = abs(predicted_doy-bloom_doy)) %>%
-  #filter(year>= 2011) %>% #
-  group_by(year) %>%
-  filter(year>=2011) %>%
-  summarise(sum= sum(absdiff))
-print(diff)
-
-#Calculating the mean of the sum of the Absolute Difference for three locations between 1950-2020
-#The mean over the 70 years is 15.5 which performs better than demo
-mean(diff$sum)
-sum(diff$sum)
-
 ############################
 # Plots and visualizations #
 ############################
@@ -312,6 +269,467 @@ temp_exp %>%
   stat_qq()+
   stat_qq_line()+
   facet_wrap(~location)
+
+########################################################################
+# General Multiple Linear Regression Model for Hot and Cold Covariates #
+########################################################################
+
+#Merging bloom days for the three locations
+cherrytembin<- merge(cherry, temp_all_hot_cold, by= c("location", "year"))
+
+#Getting rid of unnecessary variables
+cherrytembin<- select(cherrytembin, -c("alt", "lat", "long", "bloom_date"))
+
+#Fitting linear regression to see it's performance
+test_ls_fit<- lm(bloom_doy ~ year*location + cold + hot, data = cherrytembin)
+summary(test_ls_fit)
+
+#RSS
+sum(resid(test_ls_fit)^2)
+deviance(test_ls_fit)
+#MSE
+mean(test_ls_fit$residuals^2)
+#AIC
+AIC(test_ls_fit)
+
+#Performs better than demo
+
+#Fitting it for the past predictions for 3 locations
+cherrytembin<- cherrytembin %>% 
+  bind_cols(predicted_doy = predict(test_ls_fit, newdata= cherrytembin))
+
+#Calculating Absolute Difference for three locations between 1950-2020 getting the sums for 2011-2020
+diff<- cherrytembin %>%
+  group_by(year, location) %>%
+  mutate(absdiff = abs(predicted_doy-bloom_doy)) %>%
+  #filter(year>= 2011) %>% #
+  group_by(year) %>%
+  filter(year>=2011) %>%
+  summarise(sum= sum(absdiff))
+print(diff)
+
+#Calculating the mean of the sum of the Absolute Difference for three locations between 1950-2020
+#The mean over the 70 years is 15.5 which performs better than demo
+mean(diff$sum)
+sum(diff$sum)
+
+###################
+# OLS model: Year #
+###################
+
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+for(i in 2010:2020){
+  
+  # Fit simple least-squares lines for all sites.
+  ls_fit <- lm(bloom_doy ~ location * year, data = cherry, 
+               subset = year >= 1880 & year <= i)
+  
+  # Compute the predictions for all 3 sites
+  predictions <- expand_grid(location = unique(cherry$location),
+                             year = 1990:2031) %>% 
+    bind_cols(predicted_doy = predict(ls_fit, newdata = .))
+  
+  mergeCols <- c('location','year')
+  predictions <- merge(predictions, cherry[,c(-2,-3)], by=mergeCols, all.x = TRUE) %>%
+    filter(year==i+1)
+  
+  #Kyoto
+  Results[c,1] <- "kyoto"
+  Results[c,2] <- i+1
+  Results[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results[c+1,1] <- "liestal"
+  Results[c+1,2] <- i+1
+  Results[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  #Washington DC
+  Results[c+2,1] <- "washingtondc"
+  Results[c+2,2] <- i+1
+  Results[c+2,3] <- predictions$bloom_doy[predictions$location=="washingtondc"]
+  Results[c+2,4] <- predictions$predicted_doy[predictions$location=="washingtondc"]
+  
+  c<-c+3
+  
+}
+
+Results<-data.frame(Results)
+colnames(Results) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results$Observed_bloom_doy <- as.numeric(Results$Observed_bloom_doy)
+Results$Predicted <- round(as.numeric(Results$Predicted),2)
+
+Results <- Results %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted))
+
+Results %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+
+#############################################
+# OLS model: Spring and Winter avg max temp #
+#############################################
+
+# Step 1. extrapolate average seasonal maximum temperature
+#ls_fit_temperature <- lm(tmax_avg ~ year * season + location, 
+#                         data = historic_temperatures)
+
+#summary(ls_fit_temperature)
+
+#temperature_predictions <-
+#  expand_grid(location = c("washingtondc", "liestal", "kyoto", "vancouver" ),
+#              season = c("Winter", "Spring", "Summer", "Fall"),
+#              year = 1950:2032) %>%
+#  bind_cols(predicted_temperature = 
+#              predict(ls_fit_temperature, newdata = .)) %>%
+#  filter(season %in% c("Winter", "Spring"))
+
+# Step 2. predict bloom day from extrapolated temperatures
+
+#temperature_predictions <- temperature_predictions %>% 
+#  left_join(historic_temperatures, by = c("location", "year", "season"))
+
+#temperature_predictions <- temperature_predictions %>%
+#  mutate(temp_use=ifelse(is.na(tmax_avg), predicted_temperature, tmax_avg)) %>%
+#  select(-c(predicted_temperature, tmax_avg)) %>%
+#  pivot_wider(names_from = season, values_from = temp_use)
+
+#temperature_predictions <- temperature_predictions %>% 
+#  mutate(SSE=(predicted_temperature-tmax_avg)**2,
+#         y_bar=mean(temperature_predictions$tmax_avg, na.rm = TRUE),
+#         TSS=(tmax_avg-y_bar)**2)
+#(sum(temperature_predictions$TSS, na.rm = TRUE)-sum(temperature_predictions$SSE, na.rm = TRUE))/sum(temperature_predictions$TSS, na.rm = TRUE)
+#cor(temperature_predictions$predicted_temperature, temperature_predictions$tmax_avg, use = "complete.obs")**2
+
+#temperature_predictions <- temperature_predictions %>% left_join(cherry, by = c("location", "year"))
+
+#m1 <- lm(bloom_doy ~ Spring * Winter, data = temperature_predictions)
+#results_v2 <- predict(m1, newdata = pt1) %>% round() %>% bind_cols(pt1,predicted_bloom_doy=.)
+
+
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results_V2 <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+for(i in 2010:2020){
+  
+  # Step 1. extrapolate average seasonal maximum temperature
+  ls_fit_temperature <- lm(tmax_avg ~ year * season + location, 
+                           data = historic_temperatures, subset = year >= 1945 & year <= i)
+  
+  temperature_predictions <-
+    expand_grid(location = c("washingtondc", "liestal", "kyoto", "vancouver" ),
+                season = c("Winter", "Spring", "Summer", "Fall"),
+                year = 1945:2031) %>%
+    bind_cols(predicted_temperature = 
+                predict(ls_fit_temperature, newdata = .)) %>%
+    filter(season %in% c("Winter", "Spring"))
+  
+  temperature_predictions <- temperature_predictions %>% 
+    left_join(historic_temperatures, by = c("location", "year", "season"))
+  
+  temperature_predictions <- temperature_predictions %>%
+    mutate(temp_use=ifelse(is.na(tmax_avg), predicted_temperature, tmax_avg)) %>%
+    select(-c(predicted_temperature, tmax_avg)) %>%
+    pivot_wider(names_from = season, values_from = temp_use)
+  
+  temperature_predictions <- temperature_predictions %>% left_join(cherry, by = c("location", "year"))
+  
+  m1 <- lm(bloom_doy ~ Spring * Winter, data = temperature_predictions)
+  
+  predictions <- predict(m1, newdata = temperature_predictions) %>% 
+    bind_cols(temperature_predictions,predicted_doy=.) %>% filter(year==i+1)
+  
+  #Kyoto
+  Results_V2[c,1] <- "kyoto"
+  Results_V2[c,2] <- i+1
+  Results_V2[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results_V2[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results_V2[c+1,1] <- "liestal"
+  Results_V2[c+1,2] <- i+1
+  Results_V2[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results_V2[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  #Washington DC
+  Results_V2[c+2,1] <- "washingtondc"
+  Results_V2[c+2,2] <- i+1
+  Results_V2[c+2,3] <- predictions$bloom_doy[predictions$location=="washingtondc"]
+  Results_V2[c+2,4] <- predictions$predicted_doy[predictions$location=="washingtondc"]
+  
+  c<-c+3
+  
+}
+
+Results_V2<-data.frame(Results_V2)
+colnames(Results_V2) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results_V2$Observed_bloom_doy <- as.numeric(Results_V2$Observed_bloom_doy)
+Results_V2$Predicted <- round(as.numeric(Results_V2$Predicted),2)
+
+Results_V2 <- Results_V2 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) %>%
+  arrange(Year, Location)
+
+Results_V2 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+#write.csv(c(Results, Results_V2), file = 'MAE.csv')
+
+########################
+# Comparing OLS models #
+########################
+
+out1 <- Results %>% group_by(Year) %>% summarise(Total_diff_v1=sum(Abs_diff))
+out2 <- Results_V2 %>% group_by(Year) %>% summarise(Total_diff_v2=sum(Abs_diff))
+
+sum(out1$Total_diff_v1) #201.46
+sum(out2$Total_diff_v2) #196.26
+
+
+out1 %>% left_join(out2, by="Year") %>% mutate(difference=Total_diff_v1-Total_diff_v2)
+
+#################
+# Random Forest #
+#################
+
+train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+#Impute missing data using randomForest and update with proximity calculations:
+train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+#rfImpute uses na.roughfix initally to impute using median/mode.
+
+
+#test.imputed <- rfImpute(bloom_doy~., data=test, mtry=10, ntree=500)
+#test.imputed <- rf.unsupervised(data.frame(test %>% select(-c("bloom_doy"))), n=3) # does not impute, needs full data?
+
+train.imputed <- missForest(data.frame(train %>% select(-c("bloom_doy"))))$ximp # NRMSE=0.3165907
+train.imputed <- train.imputed %>% left_join(train %>% select(location, year, bloom_doy), by=c("location", "year"))
+
+rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
+rf.cherry
+
+test.imputed <- train.imputed %>% bind_rows(test)
+test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+test.imputed <- test.imputed %>% filter(year==2011)
+
+yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
+  bind_cols(test.imputed,predicted_doy=.)
+
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.70/8.18 for 2011
+
+#Iterate from 2011-2021
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results_V3 <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+set.seed(634)
+for(i in 2010:2020){
+  
+  train <- df_final %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  test <- df_final %>% filter(year == i + 1, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+  
+  test.imputed <- train.imputed %>% bind_rows(test)
+  test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+  test.imputed <- test.imputed %>% filter(year== i + 1)
+  
+  rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
+  
+  predictions <- predict(rf.cherry, newdata = test.imputed) %>% 
+    bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
+  
+  #Kyoto
+  Results_V3[c,1] <- "kyoto"
+  Results_V3[c,2] <- i+1
+  Results_V3[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results_V3[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results_V3[c+1,1] <- "liestal"
+  Results_V3[c+1,2] <- i+1
+  Results_V3[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results_V3[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  train.dc <- df_final %>% filter(year >= 1950, year <= i, location == 'washingtondc') %>%
+    select(-c(lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  test.dc <- df_final %>% filter(year == i + 1, location == 'washingtondc') %>%
+    select(-c(lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  train.imputed.dc <- rfImpute(bloom_doy~., data=train.dc, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+  
+  rf.cherry.dc <- randomForest(bloom_doy~., data=train.imputed.dc, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
+  
+  test.imputed.dc <- train.imputed.dc %>% bind_rows(test.dc)
+  test.imputed.dc <- missForest(data.frame(test.imputed.dc %>% select(-c("bloom_doy"))))$ximp
+  test.imputed.dc <- test.imputed.dc %>% filter(year== i + 1)
+  
+  predictions.dc <- predict(rf.cherry.dc, newdata = test.imputed.dc) %>% 
+    bind_cols(test.imputed.dc,predicted_doy=.) %>% left_join(test.dc %>% select(location, year, bloom_doy), by=c("location", "year"))
+  
+  #Washington DC
+  Results_V3[c+2,1] <- "washingtondc"
+  Results_V3[c+2,2] <- i+1
+  Results_V3[c+2,3] <- predictions.dc$bloom_doy[predictions.dc$location=="washingtondc"]
+  Results_V3[c+2,4] <- predictions.dc$predicted_doy[predictions.dc$location=="washingtondc"]
+  
+  c<-c+3
+  
+}
+
+Results_V3<-data.frame(Results_V3)
+colnames(Results_V3) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results_V3$Observed_bloom_doy <- as.numeric(Results_V3$Observed_bloom_doy)
+Results_V3$Predicted <- round(as.numeric(Results_V3$Predicted),2)
+
+Results_V3 <- Results_V3 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) %>%
+  arrange(Year, Location)
+
+Results_V3 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+#write.csv(c(Results_V3), file = 'MAE_seed_634_sunlightdc.csv')
+
+sum(Results_V3$Abs_diff) # 121.01 (seed 635), 122.75 (seed 634)
+
+#####################
+# Gradient Boosting #
+#####################
+
+train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
+  select(-c(lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
+  select(-c(lat, long, bloom_date)) %>%
+  mutate(location=factor(location))
+
+#Impute missing data using randomForest and update with proximity calculations:
+train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+#rfImpute uses na.roughfix initally to impute using median/mode.
+
+test.imputed <- train.imputed %>% bind_rows(test)
+test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+test.imputed <- test.imputed %>% filter(year==2011)
+
+#boosting
+boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                    shrinkage = 0.001)
+summary(boost.cherry) # relative influence plot
+
+yhat.boost <- predict(boost.cherry, newdata = test.imputed)
+
+mean((yhat.boost-test$bloom_doy)**2) # test mse = 4.77
+
+###########################
+# 2011 prediction results #
+###########################
+
+# d=1, test mse=4.77
+# d=2, test mse=4.13
+# d=3, test mse=5.96
+# d=4, test mse=5.94
+
+# d=1 with sunlight vars, test mse=4.92
+# d=2 with sunlight vars, test mse=4.16
+# d=3 with sunlight vars, test mse=4.96
+# d=4 with sunlight vars, test mse=5.05
+
+
+#Iterate from 2011-2021
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results_V4 <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+set.seed(634)
+for(i in 2010:2020){
+  
+  train <- df_final %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  test <- df_final %>% filter(year == i + 1, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    mutate(location=factor(location))
+  
+  train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
+  
+  test.imputed <- train.imputed %>% bind_rows(test)
+  test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+  test.imputed <- test.imputed %>% filter(year== i + 1)
+  
+  boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                      shrinkage = 0.001)
+  
+  predictions <- predict(boost.cherry, newdata = test.imputed) %>% 
+    bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
+  
+  #Kyoto
+  Results_V4[c,1] <- "kyoto"
+  Results_V4[c,2] <- i+1
+  Results_V4[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results_V4[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results_V4[c+1,1] <- "liestal"
+  Results_V4[c+1,2] <- i+1
+  Results_V4[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results_V4[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  #Washington DC
+  Results_V4[c+2,1] <- "washingtondc"
+  Results_V4[c+2,2] <- i+1
+  Results_V4[c+2,3] <- predictions$bloom_doy[predictions$location=="washingtondc"]
+  Results_V4[c+2,4] <- predictions$predicted_doy[predictions$location=="washingtondc"]
+  
+  c<-c+3
+  
+}
+
+Results_V4<-data.frame(Results_V4)
+colnames(Results_V4) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results_V4$Observed_bloom_doy <- as.numeric(Results_V4$Observed_bloom_doy)
+Results_V4$Predicted <- round(as.numeric(Results_V4$Predicted),2)
+
+Results_V4 <- Results_V4 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) %>%
+  arrange(Year, Location)
+
+Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
+
+sum(Results_V4$Abs_diff) # 104.87 (seed 634)
+
+############################
+# GAM model and evaluation #
+############################
+
+gam_cherry <- gam(bloom_doy ~ location + s(year), data = cherry, 
+                  subset = year >= 1880, family = poisson())
+
+gam_cherry <- gam(bloom_doy ~ te(location, year, k=7), data = cherry, 
+                  subset = year >= 1880, family = poisson())
+
+plot(gam_cherry)
+summary(gam_cherry)
 
 ##################################################################
 #  Forecasting for Average Temperature, Hot and Cold Covariates  #
