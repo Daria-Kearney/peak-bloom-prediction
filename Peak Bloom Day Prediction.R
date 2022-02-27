@@ -76,6 +76,8 @@ temp_all_hot_cold<- temp_all_hot_cold %>%
   group_by(year) %>%
   group_by(location, year, seasons) %>% summarize_all(list(~toString(unique(.))))
 
+tempseas<- temp_all_hot_cold
+
 #Erasing season variable
 temp_all_hot_cold<- subset(temp_all_hot_cold, select = -c(seasons))
 
