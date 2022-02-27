@@ -10,6 +10,7 @@ cherry <- read.csv("data/washingtondc.csv") %>%
   bind_rows(read.csv("data/liestal.csv")) %>% 
   bind_rows(read.csv("data/kyoto.csv"))
 
+## This is the data for the background 
 cherry %>% filter(year >= 1950) %>%
   ggplot(aes(year,bloom_doy, color=location)) +
   geom_line() +
