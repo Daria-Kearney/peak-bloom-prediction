@@ -284,7 +284,6 @@ tempseas<-transform(tempseas, cold= as.numeric(cold), hot= as.numeric(hot))
 #Merge the two data sets
 complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
 
-
 #####     Predicting average temperature     ######
 ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
 summary(ls_fit)
