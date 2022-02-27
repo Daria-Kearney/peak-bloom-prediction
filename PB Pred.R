@@ -378,7 +378,6 @@ hot.avg<- complete %>%
 hot.pred<- predict %>%
   bind_cols(predavg.predhot=round(predict(ls_hotp, newdata= predict)))
 
-rm(AllHot)
 
 #Getting all the hot values into one data frame
 AllHot<- subset(hot.avg, select= predhot.avg) %>%
