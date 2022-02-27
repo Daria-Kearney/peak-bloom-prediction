@@ -95,9 +95,9 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Vancouver      1957-2022             N/A
 
 
-sunlight <- read.csv("data/avg daily sunlight_dc and whatcom county wa.csv")
-str(sunlight)
-head(sunlight[sunlight$Month.Code==12,])
+sunlight <- read.csv(file.choose())
+#str(sunlight)
+#head(sunlight[sunlight$Month.Code==12,])
 sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
                                 year = ifelse(Month.Code==12, year_raw+1, year_raw)) %>%
   group_by(location, year, month) %>%
@@ -105,11 +105,10 @@ sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
   filter(month %in% c(0:4)) %>%
   pivot_wider(names_from = month, values_from = sunlight_avg, names_prefix = 'sunlight_avg_')
 
-df_final <- historic_data %>% full_join(sunlight, by = c("location", "year")) %>%
-  full_join(cherry, by=c("location", "year"))
+df_final <- historic_data %>% full_join(sunlight, by = c("location", "year"))
 
 df_final %>% group_by(location) %>% summarise(initial_year = min(year), final_year = max(year))
-write.csv(df_final, file = 'data_JF.csv')
+#write.csv(df_final, file = 'data_JF.csv')
 
 #Missing values by column
 sapply(df_final, function(x) sum(is.na(x)))
@@ -134,21 +133,33 @@ historic_temperatures %>%
   aes(year, tmax_avg) + 
   geom_line() +
   xlim(1950, 2031) +
-  labs(x = "Year", y = "Average maximum temperature (1/10 ?C)") +
+  labs(x = "Year", y = "Average maximum temperature (1/10 °C)") +
   facet_grid(factor(season) ~ str_to_title(location))
 
 #Sunlight only looks promising for March
 df_final %>%
   filter(year >= 1880, location == 'washingtondc') %>%
-  ggplot(aes(x = sunlight_avg_3, y = bloom_doy)) +
+  ggplot(aes(x = sunlight_avg_1, y = bloom_doy)) +
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
   labs(x = "Sunlight in Mar (Kj/m^2)", y = "Peak bloom (days since Jan 1st)")
 
+cor(df_final$bloom_doy, df_final$sunlight_avg_0, use="complete.obs") # -0.27
+cor(df_final$bloom_doy, df_final$sunlight_avg_1, use="complete.obs") # -.32
+cor(df_final$bloom_doy, df_final$sunlight_avg_2, use="complete.obs") # -.07
+cor(df_final$bloom_doy, df_final$sunlight_avg_3, use="complete.obs") # -.37
+cor(df_final$bloom_doy, df_final$sunlight_avg_4, use="complete.obs") # .14
+
+summary(lm(bloom_doy~sunlight_avg_0, data=df_final[df_final$location=='washingtondc',]))
+summary(lm(bloom_doy~sunlight_avg_1, data=df_final[df_final$location=='washingtondc',]))
+summary(lm(bloom_doy~sunlight_avg_2, data=df_final[df_final$location=='washingtondc',]))
+summary(lm(bloom_doy~sunlight_avg_3, data=df_final[df_final$location=='washingtondc',]))
+summary(lm(bloom_doy~sunlight_avg_4, data=df_final[df_final$location=='washingtondc',]))
+
 #Temp max avg looks best for Feb/Mar
 df_final %>%
   filter(year >= 1880, location != 'vancouver') %>%
-  ggplot(aes(x = snwd_tot_4, y = bloom_doy)) +
+  ggplot(aes(x = tmax_avg_2, y = bloom_doy)) +
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
   facet_grid(cols = vars(str_to_title(location))) +
@@ -457,11 +468,11 @@ sum(Results_V3$Abs_diff) # 121.01 (seed 635), 122.75 (seed 634)
 #####################
 
 train <- df_final %>% filter(year >= 1950, year <= 2010, location != 'vancouver') %>%
-  select(-c(lat, long, bloom_date)) %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date)) %>%
   mutate(location=factor(location))
 
-test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
-  select(-c(lat, long, bloom_date)) %>%
+test <- df_final %>% filter(year >= 2011, year <= 2021, location != 'vancouver') %>%
+  select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date)) %>%
   mutate(location=factor(location))
 
 #Impute missing data using randomForest and update with proximity calculations:
@@ -470,16 +481,26 @@ train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 i
 
 test.imputed <- train.imputed %>% bind_rows(test)
 test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
-test.imputed <- test.imputed %>% filter(year==2011)
+test.imputed <- test.imputed %>% filter(year>=2011)
 
 #boosting
 boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
                     shrinkage = 0.001)
 summary(boost.cherry) # relative influence plot
 
-yhat.boost <- predict(boost.cherry, newdata = test.imputed)
+yhat.boost <- predict(boost.cherry, newdata = test.imputed)%>% 
+  bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
 
-mean((yhat.boost-test$bloom_doy)**2) # test mse = 4.77
+mean((yhat.boost-test$bloom_doy)**2) 
+
+# test mse = 4.77
+# test mse = 74.67 imputing all covariates in test set for 2011-2021
+
+sum(abs(yhat.boost-test$bloom_doy))
+sum(abs(yhat.boost$predicted_doy-yhat.boost$bloom_doy))
+
+# test mas = 234.81 imputing all covariates in test set for 2011-2021
+
 
 ###########################
 # 2011 prediction results #
@@ -507,11 +528,13 @@ set.seed(634)
 for(i in 2010:2020){
   
   train <- df_final %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
-    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date,
+              snwd_avg_4, snwd_tot_4)) %>%
     mutate(location=factor(location))
   
   test <- df_final %>% filter(year == i + 1, location != 'vancouver') %>%
-    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date)) %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date,
+              snwd_avg_4, snwd_tot_4)) %>%
     mutate(location=factor(location))
   
   train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
@@ -557,9 +580,259 @@ Results_V4 <- Results_V4 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) 
   arrange(Year, Location)
 
 Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
-write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
+#write.csv(c(Results_V4), file = 'MAE_seed_634_boost.csv')
 
 sum(Results_V4$Abs_diff) # 104.87 (seed 634)
+
+#################################
+# Gradient Boosting with djdata #
+#################################
+
+#Iterate from 2011-2021
+#Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
+iterations = 33
+variables = 4
+Results_V5 <- matrix(ncol = variables, nrow = iterations)
+
+c <- 1
+set.seed(634)
+for(i in 2010:2020){
+  
+  train <- djdata %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date,
+              snwd_avg_4, snwd_tot_4)) %>%
+    mutate(location=factor(location))
+  
+  test <- djdata %>% filter(year == i + 1, location != 'vancouver') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date,
+              snwd_avg_4, snwd_tot_4)) %>%
+    mutate(location=factor(location))
+  
+  #impute using median/mode and update using proximity matrix over 5 iterations
+  train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500)
+  
+  #combine test rows with training to impute missing data
+  test.imputed <- train.imputed %>% bind_rows(test)
+  test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
+  test.imputed <- test.imputed %>% filter(year== i + 1)
+  
+  boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                      shrinkage = 0.001)
+  
+  predictions <- predict(boost.cherry, newdata = test.imputed) %>% 
+    bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
+  
+  #Kyoto
+  Results_V5[c,1] <- "kyoto"
+  Results_V5[c,2] <- i+1
+  Results_V5[c,3] <- predictions$bloom_doy[predictions$location=="kyoto"]
+  Results_V5[c,4] <- predictions$predicted_doy[predictions$location=="kyoto"]
+  
+  #Liestal
+  Results_V5[c+1,1] <- "liestal"
+  Results_V5[c+1,2] <- i+1
+  Results_V5[c+1,3] <- predictions$bloom_doy[predictions$location=="liestal"]
+  Results_V5[c+1,4] <- predictions$predicted_doy[predictions$location=="liestal"]
+  
+  train.dc <- djdata %>% filter(year >= 1950, year <= i, location == 'washingtondc') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date, location))
+  
+  test.dc <- djdata %>% filter(year == i + 1, location == 'washingtondc') %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date, location))
+  
+  train.imputed.dc <- rfImpute(bloom_doy~., data=train.dc, mtry=10, ntree=500)
+  
+  test.imputed.dc <- train.imputed.dc %>% bind_rows(test.dc)
+  test.imputed.dc <- missForest(data.frame(test.imputed.dc %>% select(-c("bloom_doy"))))$ximp
+  test.imputed.dc <- test.imputed.dc %>% filter(year== i + 1)
+  
+  boost.cherry.dc <- gbm(bloom_doy~., data=train.imputed.dc, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
+                      shrinkage = 0.001)
+  
+  predictions.dc <- predict(boost.cherry.dc, newdata = test.imputed.dc) %>% 
+    bind_cols(test.imputed.dc,predicted_doy=.) %>% left_join(test.dc %>% select(year, bloom_doy), by=c("year"))
+  
+  #Washington DC
+  Results_V5[c+2,1] <- "washingtondc"
+  Results_V5[c+2,2] <- i+1
+  Results_V5[c+2,3] <- predictions.dc$bloom_doy[1]
+  Results_V5[c+2,4] <- predictions.dc$predicted_doy[1]
+  
+  c<-c+3
+  
+}
+
+Results_V5<-data.frame(Results_V5)
+colnames(Results_V5) <- c("Location", "Year", "Observed_bloom_doy", "Predicted")
+Results_V5$Observed_bloom_doy <- as.numeric(Results_V5$Observed_bloom_doy)
+Results_V5$Predicted <- round(as.numeric(Results_V5$Predicted),2)
+
+Results_V5 <- Results_V5 %>% mutate(Abs_diff=abs(Observed_bloom_doy-Predicted)) %>%
+  arrange(Year, Location)
+
+Results_V5 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
+#write.csv(c(Results_V5), file = 'MAE_seed_634_boost.csv')
+
+sum(Results_V5$Abs_diff) 
+
+###########################################################
+# test error with seed 634                                #
+# Using djdata with hot (Jan/Feb) & cold (Nov/Dec) counts #
+###########################################################
+
+# 107.17 with cold, hot ??
+# 106.60 with cold, hot and Mar sunlight
+# 104.61 with cold, hot and Mar sunlight for DC
+# 104.13 with cold, hot and Mar sunlight for DC, no snwd_avg/tot_4
+
+# 104.29 with cold, hot (107.17?)
+# 105.04 with cold, hot added and sunlight for DC
+# 105.36 with cold, hot added and Mar sunlight for DC
+# 106.48 with cold, hot added and only 1979 forward data for DC with sunlight
+# 104.16 with cold, hot added and only 1979 forward data for DC with Mar sunlight only
+
+
+###################################################################
+# test error with seed 634                                        #
+# Using djdata with hot (Feb/Mar/Apr) & cold (Nov/Dec/Jan) counts #
+###################################################################
+
+# 113.09 with cold, hot added
+
+
+
+###########################################
+# MC simulation for average temp by month #
+###########################################
+
+
+#df.forecast <- df_final %>% filter(year >= 1950) %>%
+#  select(location, year, starts_with('tmax'), starts_with('tmin'), bloom_doy, alt) %>%
+#  rowwise() %>%
+#  mutate(tavg_0=mean(c(tmax_avg_0, tmin_avg_0), na.rm = TRUE),
+#         tavg_1=mean(c(tmax_avg_1, tmin_avg_1), na.rm = TRUE),
+#         tavg_2=mean(c(tmax_avg_2, tmin_avg_2), na.rm = TRUE),
+#         tavg_3=mean(c(tmax_avg_3, tmin_avg_3), na.rm = TRUE),
+#         tavg_4=mean(c(tmax_avg_4, tmin_avg_4), na.rm = TRUE))
+
+#df.forecast %>% group_by(location) %>% summarise(Dec=mean(tavg_0, na.rm = TRUE))
+
+df.forecast <- df_final %>% filter(year >= 1950) %>%
+  select(-c(lat, long, bloom_date))
+
+#df.forecast$alt[df.forecast$location=='vancouver'] <- 6
+
+temperature_predictions <-
+  expand_grid(location = c("washingtondc", "liestal", "kyoto", "vancouver" ),
+              year = 2023:2031) %>%
+  left_join(df.forecast, by=c('location', 'year')) %>%
+  select(-c(bloom_doy, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, snwd_tot_4, snwd_avg_4)) %>%
+  add_column(sigma_tmax_0=NA, .after = "tmax_avg_0") %>%
+  add_column(sigma_tmax_1=NA, .after = "tmax_avg_1") %>%
+  add_column(sigma_tmax_2=NA, .after = "tmax_avg_2") %>%
+  add_column(sigma_tmax_3=NA, .after = "tmax_avg_3") %>%
+  add_column(sigma_tmax_4=NA, .after = "tmax_avg_4") %>%
+  add_column(sigma_tmin_0=NA, .after = "tmin_avg_0") %>%
+  add_column(sigma_tmin_1=NA, .after = "tmin_avg_1") %>%
+  add_column(sigma_tmin_2=NA, .after = "tmin_avg_2") %>%
+  add_column(sigma_tmin_3=NA, .after = "tmin_avg_3") %>%
+  add_column(sigma_tmin_4=NA, .after = "tmin_avg_4") %>%
+  add_column(sigma_sunlight_3=NA, .after = "sunlight_avg_3")
+
+varlist1 <- c('tmax_avg_0', 'tmax_avg_1', 'tmax_avg_2', 'tmax_avg_3', 'tmax_avg_4',
+              'tmin_avg_0', 'tmin_avg_1', 'tmin_avg_2', 'tmin_avg_3', 'tmin_avg_4',
+              'prcp_avg_0', 'prcp_avg_1', 'prcp_avg_2', 'prcp_avg_3', 'prcp_avg_4',
+              'prcp_tot_0', 'prcp_tot_1', 'prcp_tot_2', 'prcp_tot_3', 'prcp_tot_4',
+              'snwd_avg_0', 'snwd_avg_1', 'snwd_avg_2', 'snwd_avg_3',
+              'snwd_tot_0', 'snwd_tot_1', 'snwd_tot_2', 'snwd_tot_3', 'sunlight_avg_3')
+
+# Extrapolate monthly temperatures, precipitation, snowfall depth, and March sunlight (DC & Vancouver)
+for (i in 1:length(varlist1)){
+  
+  if(grepl('max', varlist1[i]) | grepl('min', varlist1[i])){
+    mod <- as.formula(paste0(varlist1[i], "~year+location"))
+    m1_glm <- glm(mod, data=df.forecast)
+    j <- which(colnames(temperature_predictions)==varlist1[i])
+    
+    temperature_predictions[,j] <- predict(m1_glm, temperature_predictions)
+    temperature_predictions[,j+1] <- sqrt(m1_glm$deviance/m1_lm$df.residual)
+    
+    print(paste(varlist1[i], sqrt(m1_glm$deviance/m1_glm$df.residual)))
+  }
+  else if(grepl('sun', varlist1[i])){
+    mod <- as.formula(paste0(varlist1[i], "~year+location"))
+    m1_glm <- glm(mod, data=df.forecast)
+    j <- which(colnames(temperature_predictions)==varlist1[i])
+    
+    temperature_predictions[temperature_predictions$location %in% c('washingtondc', 'vancouver'),j] <- predict(m1_glm, temperature_predictions[temperature_predictions$location %in% c('washingtondc', 'vancouver'),])
+    temperature_predictions[temperature_predictions$location %in% c('washingtondc', 'vancouver'),j+1] <- sqrt(m1_glm$deviance/m1_lm$df.residual)
+    
+    print(paste(varlist1[i], sqrt(m1_glm$deviance/m1_glm$df.residual)))
+  }
+  else{
+    mod <- as.formula(paste0("round(", varlist1[i], ")", "~year+location"))
+    m2_glm <- glm(mod, data=df.forecast, family = 'poisson')
+    
+    j <- which(colnames(temperature_predictions)==varlist1[i])
+    temperature_predictions[,j] <- predict(m2_glm, temperature_predictions)
+  }
+  
+}
+
+for(i in 1:1000){
+  
+  bloom_forecast <-
+    temperature_predictions %>%
+    rowwise() %>%
+    mutate(tmax_avg_0 = rnorm(1, tmax_avg_0, sigma_tmax_0),
+           tmax_avg_1 = rnorm(1, tmax_avg_1, sigma_tmax_1),
+           tmax_avg_2 = rnorm(1, tmax_avg_2, sigma_tmax_2),
+           tmax_avg_3 = rnorm(1, tmax_avg_3, sigma_tmax_3),
+           tmax_avg_4 = rnorm(1, tmax_avg_4, sigma_tmax_4),
+           tmin_avg_0 = rnorm(1, tmin_avg_0, sigma_tmin_0),
+           tmin_avg_1 = rnorm(1, tmin_avg_1, sigma_tmin_1),
+           tmin_avg_2 = rnorm(1, tmin_avg_2, sigma_tmin_2),
+           tmin_avg_3 = rnorm(1, tmin_avg_3, sigma_tmin_3),
+           tmin_avg_4 = rnorm(1, tmin_avg_4, sigma_tmin_4),
+           prcp_avg_0 = rpois(1, prcp_avg_0), prcp_avg_1 = rpois(1, prcp_avg_1),
+           prcp_avg_2 = rpois(1, prcp_avg_2), prcp_avg_3 = rpois(1, prcp_avg_3),
+           prcp_avg_4 = rpois(1, prcp_avg_4), prcp_tot_0 = rpois(1, prcp_tot_0),
+           prcp_tot_1 = rpois(1, prcp_tot_1), prcp_tot_2 = rpois(1, prcp_tot_2),
+           prcp_tot_3 = rpois(1, prcp_tot_3), prcp_tot_4 = rpois(1, prcp_tot_4),
+           snwd_avg_0 = rpois(1, snwd_avg_0), snwd_avg_1 = rpois(1, snwd_avg_1),
+           snwd_avg_2 = rpois(1, snwd_avg_2), snwd_avg_3 = rpois(1, snwd_avg_3),
+           snwd_tot_0 = rpois(1, snwd_tot_0), snwd_tot_1 = rpois(1, snwd_tot_1),
+           snwd_tot_2 = rpois(1, snwd_tot_2), snwd_tot_3 = rpois(1, snwd_tot_3),
+           sunlight_avg_3 = rnorm(1, sunlight_avg_3, sigma_sunlight_3))
+  
+  predictions <- predict(boost.cherry, newdata = bloom_forecast %>% filter(location %in% c('liestal', 'kyoto'))) %>% 
+    bind_cols(bloom_forecast,predicted_doy=.)
+  
+  predictions.dc <- predict(boost.cherry, newdata = bloom_forecast %>% filter(location %in% c('vancouver', 'washingtondc'))) %>% 
+    bind_cols(bloom_forecast,predicted_doy=.)
+  
+}
+
+
+
+ls_bloom <- lm(bloom_doy ~ tavg_0 + tavg_1 + tavg_2 + tavg_3 + year + alt, 
+               data = df.forecast)
+summary(ls_bloom)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ############################
 # GAM model and evaluation #
