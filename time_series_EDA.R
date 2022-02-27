@@ -2,37 +2,58 @@ library(rnoaa)
 library(tidyverse)
 library(lubridate)
 library(astsa)
+library(dynlm)
+
+options(scipen = 100)
 
 cherry <- read.csv("data/washingtondc.csv") %>% 
   bind_rows(read.csv("data/liestal.csv")) %>% 
   bind_rows(read.csv("data/kyoto.csv"))
 
-dc <- read.csv("data/washingtondc.csv")
-liestal <- read.csv("data/liestal.csv")
-kyoto <- read.csv("data/kyoto.csv")
-
 cherry %>% filter(year >= 1950) %>%
-          ggplot(aes(year,bloom_doy)) +
-             geom_line() +
-             facet_wrap(~location)
+  ggplot(aes(year,bloom_doy, color=location)) +
+  geom_line() +
+  labs(x="Year",
+       y="Days from January 1st",
+       title="Peak Bloom Dates (1950-2021)") +
+  theme_minimal()
 
-(r = round(acf(dc$bloom_doy, 8, plot=FALSE)$acf[-1], 8))
-plot(stats::lag(dc$bloom_doy,-8), dc$bloom_doy); legend('topleft', legend=r[8])
+## Estimating linear trend in all locations, prior to 2000 for forecasting
 
-head(tempall)
-tempall<- merge(days_max, days_min, by=c("location", "date"))
-tempall$tavg <- rowMeans(tempall[ , c("tmax", "tmin")], na.rm= FALSE)
-tempall <- mutate(tempall,
-                  year = as.integer(format(tempall$date,"%Y")))
+kyoto <- dplyr::filter(cherry,location=="kyoto",year<2000)
+liestal <- dplyr::filter(cherry,location=="liestal",year<2000)
+dc <- dplyr::filter(cherry,location=="washingtondc", year<2000)
 
-year_temp <- tempall %>%
-  group_by(year,location) %>%
-  summarise(mean_temp = mean(tavg, na.rm=TRUE))
+kyoto_bloom <- ts(kyoto$bloom_doy,frequency=1)
+liestal_bloom <- ts(liestal$bloom_doy,frequency=1)
+dc_bloom <- ts(dc$bloom_doy,frequency=1)
 
-dc_temp <- dplyr::filter(year_temp, location=="washingtondc")
-kyoto_temp <- dplyr::filter(year_temp, location=="kyoto")
-liestal_temp <- dplyr::filter(year_temp, location=="liestal")
+# Trend component for modeling
+trend_k <- time(kyoto_bloom)
+trend_l <- time(liestal_bloom)
+trend_dc <- time(dc_bloom)
 
-acf(dc_temp$mean_temp)
-acf(kyoto_temp$mean_temp)
-acf(liestal_temp$mean_temp)
+summary(tfit_k <- lm(kyoto_bloom ~ trend_k))
+summary(tfit_l <- lm(liestal_bloom ~ trend_l))
+summary(tfit_dc <- lm(dc_bloom ~ trend_dc))
+
+### All plots suggest lagged 1 variable is statistically significant 
+plot(diff(kyoto_bloom), type="o")
+mean(diff(kyoto_bloom)) # drift estimate = .002
+acf(diff(dc_bloom), 48)
+
+plot(diff(liestal_bloom), type="o")
+mean(diff(liestal_bloom)) # drift estimate = -0.114
+acf(diff(liestal_bloom), 48)
+
+plot(diff(dc_bloom), type="o")
+mean(diff(dc_bloom)) # drift estimate = .205
+acf(diff(dc_bloom), 48)
+
+## Scatterplot on the lagged variables shows no influence of non-linear relationships
+lag1.plot(kyoto_bloom,4)
+lag1.plot(liestal_bloom,4)
+lag1.plot(dc_bloom, 4)
+
+
+
