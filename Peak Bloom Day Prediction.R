@@ -702,7 +702,7 @@ test.imputed <- test.imputed %>% filter(year==2011)
 yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
   bind_cols(test.imputed,predicted_doy=.)
 
-mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 8.38 for 2011
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 8.43 for 2011
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
