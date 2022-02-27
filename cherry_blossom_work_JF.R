@@ -133,7 +133,7 @@ historic_temperatures %>%
   aes(year, tmax_avg) + 
   geom_line() +
   xlim(1950, 2031) +
-  labs(x = "Year", y = "Average maximum temperature (1/10 °C)") +
+  labs(x = "Year", y = "Average maximum temperature (1/10 ?C)") +
   facet_grid(factor(season) ~ str_to_title(location))
 
 #Sunlight only looks promising for March
