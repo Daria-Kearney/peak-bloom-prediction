@@ -11,7 +11,7 @@ library(randomForest)
 library(missForest) # missForest()
 library(gbm) # gbm()
 library(Hmisc) #prcomp()
-library(astsa) #lag.1plot & #acf()
+library(astsa) #lag.1plot & acf()
 library(dynlm)
 
 # Load data
@@ -37,7 +37,7 @@ get_temperature <- function (stationid) {
                         labels = c("Winter", "Spring", "Summer", "Fall")),
            year = if_else(month == 0, year + 1L, year)) %>%
     group_by(year, season) %>%
-    summarize(tmax_avg = mean(tmax, na.rm = TRUE))
+    summarise(tmax_avg = mean(tmax, na.rm = TRUE))
 }
 
 historic_temperatures <-
@@ -1016,9 +1016,9 @@ ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
 summary(ls_fit)
 
 #RSS
-deviance(ls_fit) #132963
+deviance(ls_fit) #132963.1
 #MSE
-mean(ls_fit$residuals^2) #263
+mean(ls_fit$residuals^2) #263.82
 #AIC
 AIC(ls_fit) #4260.21
 predict(ls_fit, newdata= complete)
@@ -1042,6 +1042,8 @@ predict<- complete %>%
   bind_cols(predicted_avgt = round(predict(ls_fit, newdata= complete)))
 
 #Grouped by locations and seasons predicted vs actual for average temperature
+
+#Grouped by locations and seasons predicted and actual temp by year
 predict %>%
   ggplot(aes(x = year, y=predicted_avgt)) +
   geom_line()+ 
@@ -1056,11 +1058,11 @@ ls_hotp<- lm(hot~ predicted_avgt + location + seasons * I(year^2), data = predic
 summary(ls_hotp) #R^2 = .365
 
 #RSS
-deviance(ls_hotp) #1690.574
+deviance(ls_hotp) #1690.57
 #MSE
-mean(ls_hotp$residuals^2) #3.3543
+mean(ls_hotp$residuals^2) #3.35
 #AIC
-AIC(ls_hotp) #2058
+AIC(ls_hotp) #2058.26
 
 ####### Using Predicted Average Temp to Compare to Actual Average Temp.  ########
 
@@ -1301,7 +1303,7 @@ for(i in 1:10){
 
 
 # Generate predicted bloom date for 2022
-df.past <- djdata %>% filter(year >= 1950, year <= 2022) %>%
+df.past <- complete_df %>% filter(year >= 1950, year <= 2022) %>%
   select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date,
             snwd_avg_4, snwd_tot_4, cold, bloom_doy)) %>%
   mutate(location=factor(location),
