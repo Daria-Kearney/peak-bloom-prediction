@@ -13,6 +13,7 @@ library(gbm) # gbm()
 library(Hmisc) #prcomp()
 library(astsa) #lag.1plot & acf()
 library(dynlm)
+library(gridExtra) #grid.arrange() #maybe?
 
 # Load data
 cherry <- read.csv("data/washingtondc.csv") %>% 
@@ -237,7 +238,7 @@ data1 <- select(data,!c("lat","long","bloom_date"))
 # Plots and visualizations #
 ############################
 
-# Plot data by city
+# Line plot by location of peak bloom days vs. year
 cherry %>% 
   filter(year >= 1880) %>%
   ggplot(aes(x = year, y = bloom_doy)) +
@@ -246,6 +247,50 @@ cherry %>%
   scale_x_continuous(breaks = seq(1880, 2020, by = 20)) +
   facet_grid(cols = vars(str_to_title(location))) +
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
+
+#Line Plot for years vs. Bloom Day
+cherry %>% filter(year >= 1950) %>%
+  ggplot(aes(year,bloom_doy, color=(str_to_title(location)))) +
+  geom_line(aes(),size =.8) +
+  labs(x="Year",
+       y="Days from January 1st",
+       title="Peak Bloom Days (1950-2021)",
+       color = "Location",
+       caption = "Figure 1: Peak Bloom Days from January 1st of three different locations from 1950 to 2021 ") +
+  scale_colour_manual(values=c("#0072B2", "#E69F00", "#009E73")) + 
+  theme_minimal(base_line_size = 1, base_rect_size = 1) +
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+
+#Scatterplot of Average Tmax by Months vs Peak Bloom Date by Location
+#Use in Powerpoint
+overlayline<- df_final %>%
+  group_modify(function (.x, .y){
+    avg1_ls<- lm(bloom_doy~ tmax_avg_1, data =df_final)
+    avg3_ls<- lm(bloom_doy~ tmax_avg_3, data =df_final)
+    res<- tibble(tmax_avg_1 = df_final$tmax_avg_1, tmax_avg_3 = df_final$tmax_avg_3)
+    res$predict.bloom_doy1<- predict(avg1_ls, newdata= .)
+    res$predict.bloom_doy3<- predict(avg3_ls, newdata= .)
+    res
+  })
+
+colors<- c("Jan"="#0072B2", "March" = "#E69F00")
+
+df_final %>% 
+  ggplot(aes(y = bloom_doy))+ 
+  geom_point(aes(x= tmax_avg_1, colour = "Jan"))+
+  geom_point(aes(x= tmax_avg_3, colour= "March"))+
+  geom_line(data = overlayline, aes(x = tmax_avg_1, y=predict.bloom_doy1, colour ="Jan"))+ 
+  geom_line(data = overlayline, aes(x = tmax_avg_3, y=predict.bloom_doy3, colour = "March"))+
+  labs(x="Max Temperature",
+       y="Days from January 1st",
+       title="Peak Bloom Days vs. Max Temperature",
+       colour = "Months",
+       caption = "Figure 2: Peak Bloom Days and Average Max Temperatuer for March and Jan")+ 
+  scale_color_manual(values= colors) + 
+  theme_minimal(base_line_size = 1, base_rect_size = 1)+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
 
 #Plot tmax average for 1950-2020
 historic_temperatures %>%
@@ -316,6 +361,7 @@ temp_exp %>%
   facet_wrap(~location)
 
 #Line Plot for years vs. bloom Day
+#Used in powerpoint
 cherry %>% filter(year >= 1950) %>%
   ggplot(aes(year,bloom_doy, color=location)) +
   geom_line() +
@@ -1010,6 +1056,32 @@ tempseas<-transform(tempseas, cold= as.numeric(cold), hot= as.numeric(hot))
 
 #Merge the two data sets
 complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
+
+#Three graphs looking at relationship of temperature, hot, and bloom day
+#Use in Power Point
+#Scatter plot of hot vs. average temp.
+complete %>%
+  filter(seasons=="Spring") %>%
+  ggplot(aes(x = avgt, y= hot, color = location))+ 
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)+ 
+  theme_minimal()
+#Scatter plot of hot vs. bloom day
+complete %>%
+  filter(seasons=="Spring") %>%
+  merge(cherry,. , by= c("location", "year")) %>%
+  ggplot(aes(x=hot, y=bloom_doy))+
+  geom_point()+
+  facet_grid(~location)+
+  geom_smooth(method= "lm", se = FALSE)
+#Scatter plot of average temp vs. bloom day
+complete %>%
+  filter(seasons=="Spring") %>%
+  merge(cherry,. , by= c("location", "year")) %>%
+  ggplot(aes(x=avgt, y=bloom_doy))+
+  geom_point()+
+  facet_grid(~location)+
+  geom_smooth(method= "lm", se = FALSE)
 
 ##########     Predicting Average Temperature     ################
 ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
