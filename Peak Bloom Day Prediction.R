@@ -1058,9 +1058,14 @@ temp_exp %>%
   ggplot(aes(sample= avgt, color = seasons)) + 
   stat_qq()+
   stat_qq_line()+
-  facet_wrap(~(str_to_title(location)))+
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title= "QQ Plots for seasons average temp", color = "Seasons") +
+       title= "QQ Plots for Seasonal Average Temperature", color = "Seasons",
+  caption= "Figure 5: Quantile-Quantile plots of seasonal average temperature from 1950 to 2020 for four different locations.") +
+  scale_colour_manual(labels = c("Spring", "Winter"),
+                      values = c("#009e73","#56B4E9")) +
+  theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5), 
         plot.caption = element_text(hjust=0))
   
@@ -1090,6 +1095,7 @@ in Spring with a loess linear smoothing line for the four different locations.")
         plot.caption = element_text(hjust=0))
 
 #Loess Smooth Juxtaposed Average temp and Hot with Bloom Date for just Spring
+#Use in Powerpoint
 p<-complete %>%
   filter(seasons=="Spring") %>%
   merge(cherry,. , by= c("location", "year")) %>%
@@ -1112,7 +1118,7 @@ q<- complete %>%
                       values = c("#0072B2","#E69F00", "#009E73"))
 
 grid.arrange(p, q, ncol=2, top = "Comparing Average Temperature and Number of Days with Peak Bloom Day", 
-bottom= textGrob("Figure 4: A loess smooth juxtaposed graph comparing average temp. and number of hot days with the peak bloom day for Spring", 
+bottom= textGrob("Figure 4: A loess smooth juxtaposed graph comparing average temp. and number of hot days with the peak bloom day for Spring.", 
                  gp= gpar(fontsize =9), just = "center"))
 
 ##########     Predicting Average Temperature     ################
