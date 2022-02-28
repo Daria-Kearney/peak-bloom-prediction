@@ -1459,7 +1459,7 @@ for(i in 1:100){
 # Generate predicted bloom date for 2022
 df.past <- complete_df %>% filter(year >= 1950, year <= 2022) %>%
   select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date,
-            snwd_avg_4, snwd_tot_4, cold, bloom_doy)) %>%
+            snwd_avg_4, snwd_tot_4, cold, tavg, bloom_doy)) %>%
   mutate(location=factor(location),
          alt=ifelse(is.na(alt) & location %in% c('vancouver', 'washingtondc'), 0,
                     ifelse(is.na(alt) & location=='liestal', 350, 
@@ -1482,7 +1482,7 @@ output <- Results_forecast %>% group_by(location, year) %>%
   rbind(predictions.2022 %>% select(location, year, predicted_doy)) %>%
   rbind(predictions.2022.dc %>% select(location, year, predicted_doy))
 
-write.csv(output, file='forecast_100.csv')
+#write.csv(output, file='forecast_100.csv')
 
 
 
