@@ -15,6 +15,7 @@ library(astsa) #lag.1plot & acf()
 library(dynlm)
 library(gridExtra) #grid.arrange()
 library(ggpubr) #ggarrange()
+library(grid) #textGrob( )
 
 # Load data
 cherry <- read.csv("data/washingtondc.csv") %>% 
@@ -250,18 +251,20 @@ cherry %>%
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
 
 #Line Plot for years vs. Bloom Day
+#Use in Powerpoint
 cherry %>% filter(year >= 1950) %>%
-  ggplot(aes(year,bloom_doy, color=(str_to_title(location)))) +
+  ggplot(aes(year,bloom_doy, color=location)) +
   geom_line(aes(),size =.8) +
   labs(x="Year",
        y="Days from January 1st",
-       title="Peak Bloom Days (1950-2021)",
+       title="The Peak Bloom Days from 1950 to 2021",
        color = "Location",
-       caption = "Figure 1: Peak Bloom Days from January 1st of three different locations from 1950 to 2021 ") +
-  scale_colour_manual(values=c("#0072B2", "#E69F00", "#009E73")) + 
+       caption = "Figure 1: Peak bloom days starting January 1st of three different locations from 1950 to 2021") +
+  scale_colour_manual(labels = c("Washington D.C.", "Kyoto", "Liestal- Weideli"),
+                      values = c("#0072B2","#E69F00", "#009E73")) + 
   theme_minimal(base_line_size = 1, base_rect_size = 1) +
   theme(plot.title =element_text(hjust = 0.5), 
-        plot.caption = element_text(hjust=0))
+        plot.caption = element_text(hjust=0)) 
 
 #Scatterplot of Average Tmax by Months vs Peak Bloom Date by Location
 #Use in Powerpoint
@@ -275,19 +278,20 @@ overlayline<- df_final %>%
     res
   })
 
-colors<- c("Jan"="#0072B2", "March" = "#E69F00")
+colors<- c("January"="#0072B2", "March" = "#E69F00")
 
 df_final %>% 
   ggplot(aes(y = bloom_doy))+ 
-  geom_point(aes(x= tmax_avg_1, colour = "Jan"))+
+  geom_point(aes(x= tmax_avg_1, colour = "January"))+
   geom_point(aes(x= tmax_avg_3, colour= "March"))+
-  geom_line(data = overlayline, aes(x = tmax_avg_1, y=predict.bloom_doy1, colour ="Jan"))+ 
+  geom_line(data = overlayline, aes(x = tmax_avg_1, y=predict.bloom_doy1, colour ="January"))+ 
   geom_line(data = overlayline, aes(x = tmax_avg_3, y=predict.bloom_doy3, colour = "March"))+
-  labs(x="Max Temperature",
+  labs(x="Max Temperature (1/10 °C)",
        y="Days from January 1st",
-       title="Peak Bloom Days vs. Max Temperature",
+       title="Peak Bloom Days versus Max Temperature",
        colour = "Months",
-       caption = "Figure 2: Peak Bloom Days and Average Max Temperatuer for March and Jan")+ 
+       caption = "Figure 2: Peak bloom days and average maximum temperature for January and March overlayed with a linear regression 
+predicting peak bloom given max. temperature.")+ 
   scale_color_manual(values= colors) + 
   theme_minimal(base_line_size = 1, base_rect_size = 1)+
   theme(plot.title =element_text(hjust = 0.5), 
@@ -1071,11 +1075,19 @@ complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
 #Scatter plot of hot vs. average temp.
 complete %>%
   filter(seasons=="Spring") %>%
-  ggplot(aes(x = avgt, y= hot, color = (str_to_title(location))))+ 
+  ggplot(aes(x = avgt, y= hot, color = location))+ 
   geom_point()+
   geom_smooth(method = "lm", se = FALSE)+ 
   theme_minimal()+
-  labs(x= "Average Temperature", y= "Hot", color = "Location")
+  labs(x= "Average Temperature (1/10 °C)", y= "Number of Hot Days",
+       title = "Number of Hot Days versus Average Temperature by Location", 
+       color = "Location",
+       caption = "Figure 3: The number of hot days in Spring (Jan./Feb.) versus the average temperature (1/10 °C) 
+in Spring with a loess linear smoothing line for the four different locations.")+
+  scale_colour_manual(labels = c("Vancouver", "Kyoto", "Liestal- Weideli", "Washington D.C."),
+                    values = c("#0072B2","#E69F00", "#009E73", "#F0E442"))+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
 
 #Loess Smooth Juxtaposed Average temp and Hot with Bloom Date for just Spring
 p<-complete %>%
@@ -1085,7 +1097,9 @@ p<-complete %>%
   geom_smooth(method = "lm")+
   theme_minimal()+
   theme(legend.position= "none")+
-  labs(x = "Average Temp", y = "Peak Bloom Date")
+  labs(x = "Average Temperature (1/10 °C)", y = "Days from January 1st")+
+  scale_colour_manual(labels = c("Kyoto", "Liestal- Weideli", "Washington D.C."),
+                      values = c("#0072B2","#E69F00", "#009E73"))
 
 q<- complete %>%
   filter(seasons=="Spring") %>%
@@ -1093,9 +1107,13 @@ q<- complete %>%
   ggplot(aes(x = hot, y=bloom_doy, color = (str_to_title(location))))+
   geom_smooth(method = "lm")+
   theme_minimal()+
-  labs(x= "Number of Hot days", y = "Peak Bloom Date", color = "Location")
+  labs(x= "Number of Hot Days", y = "Days from January 1st", color = "Location")+
+  scale_colour_manual(labels = c("Kyoto", "Liestal- Weideli", "Washington D.C."),
+                      values = c("#0072B2","#E69F00", "#009E73"))
 
-grid.arrange(p, q, ncol=2)
+grid.arrange(p, q, ncol=2, top = "Comparing Average Temperature and Number of Days with Peak Bloom Day", 
+bottom= textGrob("Figure 4: A loess smooth juxtaposed graph comparing average temp. and number of hot days with the peak bloom day for Spring", 
+                 gp= gpar(fontsize =9), just = "center"))
 
 ##########     Predicting Average Temperature     ################
 ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #R^2 = .6431
