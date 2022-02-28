@@ -492,9 +492,9 @@ cherrytembin %>%
   facet_grid(cols = vars(str_to_title(location))) +
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
 
-###################
-# OLS model: Year #
-###################
+##############################
+# OLS model: Year by Location#
+##############################
 
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
 iterations = 33
