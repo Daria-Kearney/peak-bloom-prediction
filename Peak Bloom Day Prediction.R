@@ -1465,10 +1465,11 @@ df.past <- complete_df %>% filter(year >= 1950, year <= 2022) %>%
                     ifelse(is.na(alt) & location=='liestal', 350, 
                            ifelse(is.na(alt) & location=='kyoto', 44, alt))))
 
+set.seed(634)
 df.2022 <- missForest(data.frame(df.past))$ximp
 df.2022 <- df.2022 %>% filter(year==2022)
 
-predictions.2022 <- predict(boost.cherry, newdata=df.2022 %>% filter(location %in% c('liestal', 'vancouver'))) %>%
+predictions.2022 <- predict(boost.cherry, newdata=df.2022 %>% filter(location %in% c('liestal', 'kyoto'))) %>%
   bind_cols(df.2022 %>% filter(location %in% c('liestal', 'kyoto')), predicted_doy=.)
 predictions.2022.dc <- predict(boost.cherry.dc, newdata=df.2022 %>% filter(location %in% c('vancouver', 'washingtondc'))) %>%
   bind_cols(df.2022 %>% filter(location %in% c('vancouver', 'washingtondc')), predicted_doy=.)
@@ -1481,7 +1482,7 @@ output <- Results_forecast %>% group_by(location, year) %>%
   rbind(predictions.2022 %>% select(location, year, predicted_doy)) %>%
   rbind(predictions.2022.dc %>% select(location, year, predicted_doy))
 
-#write.csv(output, file='forecast.csv')
+write.csv(output, file='forecast_100.csv')
 
 
 
