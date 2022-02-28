@@ -1204,11 +1204,11 @@ AllHot<- subset(hot.avg, select= predhot.avg) %>%
 AllHot %>%
   filter(seasons=="Spring") %>%
   ggplot(aes(x = year)) + 
-  geom_line(aes(y =hot, color= "actual")) +
-  geom_line(aes(y= predhot.avg, color ="pred hot"))+
-  geom_line(aes(y= predavg.predhot, color ="predict hot/ pred. temp")) + 
+  geom_line(aes(y =hot, color= "Actual Hot Value")) +
+  geom_line(aes(y= predhot.avg, color ="Predicted Hot Value"))+
+  geom_line(aes(y= predavg.predhot, color ="Predict Hot|Predicted Temp.")) + 
   facet_grid(vars(str_to_title(location)))+
-  labs(x = "Year", y = "Number of Days")
+  labs(x = "Year", y = "Number of Days", color = "Methods", title = "Line Plot of Hot Values")
 
 ########  Predicting cold variable in a multiple linear regression  ############
 ls_fitcold<- lm(cold~ I(year>=1975)*I(location== "liestal")+ seasons, data = complete)
