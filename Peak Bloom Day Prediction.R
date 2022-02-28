@@ -13,7 +13,8 @@ library(gbm) # gbm()
 library(Hmisc) #prcomp()
 library(astsa) #lag.1plot & acf()
 library(dynlm)
-library(gridExtra) #grid.arrange() #maybe?
+library(gridExtra) #grid.arrange()
+library(ggpubr) #ggarrange()
 
 # Load data
 cherry <- read.csv("data/washingtondc.csv") %>% 
@@ -149,10 +150,10 @@ tempall<- merge(days_max, days_min, by=c("location", "date"))
 #Getting temperature average
 tempall$tavg <- rowMeans(tempall[ , c("tmax", "tmin")], na.rm= FALSE)
 
-#Creating binary variable label "cold" for when average temperature is <= -115 (1/10 °C)=> 11°F
+#Creating binary variable label "cold" for when average temperature is <= -115 (1/10 °C)= 11°F
 tempall$cold<- ifelse(tempall$tavg <= -115, 1, 0)
 
-#Creating binary variable label "warm" for when average temperature is <= 100(1/10 °C)=> 50°F
+#Creating binary variable label "warm" for when average temperature is <= 100(1/10 °C)= 50°F
 tempall$hot<- ifelse(tempall$tavg >= 100, 1, 0)
 
 #Getting the data for just Nov, Dec, Jan, & Feb
@@ -353,7 +354,7 @@ temp_exp %>% filter(year>= 2019) %>%
   geom_histogram(aes(fill=seasons))+
   facet_wrap(~location + year)
 
-#All QQ plots for all 4 locations
+#All QQ plots for all 4 locations daily average temp.
 temp_exp %>%
   ggplot(aes(sample= tavg, color = seasons)) + 
   stat_qq()+
@@ -361,7 +362,7 @@ temp_exp %>%
   facet_wrap(~location)
 
 #Line Plot for years vs. bloom Day
-#Used in powerpoint
+#Used in Powerpoint
 cherry %>% filter(year >= 1950) %>%
   ggplot(aes(year,bloom_doy, color=location)) +
   geom_line() +
@@ -1051,6 +1052,18 @@ temp_exp<- temp_exp %>%
   group_by(year, location, seasons) %>%
   summarise(avgt= mean(tavg, na.rm = TRUE))
 
+#All QQ plots for all 4 locations for the average temp by season
+#Use in Powerpoint
+temp_exp %>%
+  ggplot(aes(sample= avgt, color = seasons)) + 
+  stat_qq()+
+  stat_qq_line()+
+  facet_wrap(~(str_to_title(location)))+
+  labs(x = "Theoretical Quantiles", y="Standarized residuals",
+       title= "QQ Plots for seasons average temp", color = "Seasons") +
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+  
 #Using a data sets from temp_all_hot
 tempseas<-transform(tempseas, cold= as.numeric(cold), hot= as.numeric(hot))
 
@@ -1089,7 +1102,7 @@ q<- complete %>%
 grid.arrange(p, q, ncol=2)
 
 ##########     Predicting Average Temperature     ################
-ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
+ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #R^2 = .6431
 summary(ls_fit)
 
 #RSS
@@ -1200,7 +1213,7 @@ AllHot %>%
 ########  Predicting cold variable in a multiple linear regression  ############
 ls_fitcold<- lm(cold~ I(year>=1975)*I(location== "liestal")+ seasons, data = complete)
 summary(ls_fitcold) #R^2=.02543
-round(predict(ls_fitcold, newdata = comp))
+round(predict(ls_fitcold, newdata = complete))
 
 ##############  Combining the predicted and full data set  ####################
 #Making the extended dates from 2021 to 2032 
@@ -1269,6 +1282,74 @@ complete_df<- full_join(df_final, Predict, by = c("year", "location"))
 ############################################################################
 # MC simulation to forecast remaining covariates and 2023-2031 bloom dates #
 ############################################################################
+#QQplot for Normality
+#Use in Powerpoint
+q1<- df_final %>%
+  ggplot(aes(sample= tmax_avg_3, shape = location, color = str_to_title(location))) + 
+  stat_qq()+
+  stat_qq_line()+
+  labs(x = "Theoretical Quantiles", y="Standarized residuals",
+       title = "Max Average Temp in March")+
+  scale_color_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
+  scale_shape_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c(15, 5, 17, 4))+
+  theme_minimal()+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+
+q2<- df_final %>%
+  ggplot(aes(sample= tmax_avg_2, shape = location, color = str_to_title(location))) + 
+  stat_qq()+
+  stat_qq_line()+
+  labs(x = "Theoretical Quantiles", y="Standarized residuals",
+       title = "Max Average Temp in Feb.")+
+  scale_color_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
+  scale_shape_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c(15, 5, 17, 4))+
+  theme_minimal()+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+
+
+q3<- df_final %>%
+  ggplot(aes(sample= snwd_avg_2, shape = location, color = str_to_title(location))) + 
+  stat_qq()+
+  stat_qq_line() + 
+  labs(x = "Theoretical Quantiles", y="Standarized residuals",
+       title = "Average Snow Fall for Feb.")+
+  scale_color_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
+  scale_shape_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c(15, 5, 17, 4))+
+  theme_minimal()+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+
+q4<- df_final %>%
+  ggplot(aes(sample= tmin_avg_3, shape = location, color = str_to_title(location))) + 
+  stat_qq()+
+  stat_qq_line()+
+  labs(x = "Theoretical Quantiles", y="Standarized residuals",
+       title = "Min Average Temp for March", color = "Location")+
+  scale_color_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
+  scale_shape_manual(name= "Location",
+                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     values=c(15, 5, 17, 4))+
+  theme_minimal()+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
+#Creating grid of all 4 QQ plots
+ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
 
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
