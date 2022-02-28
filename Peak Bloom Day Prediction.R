@@ -1062,26 +1062,31 @@ complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
 #Scatter plot of hot vs. average temp.
 complete %>%
   filter(seasons=="Spring") %>%
-  ggplot(aes(x = avgt, y= hot, color = location))+ 
+  ggplot(aes(x = avgt, y= hot, color = (str_to_title(location))))+ 
   geom_point()+
   geom_smooth(method = "lm", se = FALSE)+ 
-  theme_minimal()
-#Scatter plot of hot vs. bloom day
-complete %>%
+  theme_minimal()+
+  labs(x= "Average Temperature", y= "Hot", color = "Location")
+
+#Loess Smooth Juxtaposed Average temp and Hot with Bloom Date for just Spring
+p<-complete %>%
   filter(seasons=="Spring") %>%
   merge(cherry,. , by= c("location", "year")) %>%
-  ggplot(aes(x=hot, y=bloom_doy))+
-  geom_point()+
-  facet_grid(~location)+
-  geom_smooth(method= "lm", se = FALSE)
-#Scatter plot of average temp vs. bloom day
-complete %>%
+  ggplot(aes(x= avgt, y=bloom_doy, color = location))+
+  geom_smooth(method = "lm")+
+  theme_minimal()+
+  theme(legend.position= "none")+
+  labs(x = "Average Temp", y = "Peak Bloom Date")
+
+q<- complete %>%
   filter(seasons=="Spring") %>%
   merge(cherry,. , by= c("location", "year")) %>%
-  ggplot(aes(x=avgt, y=bloom_doy))+
-  geom_point()+
-  facet_grid(~location)+
-  geom_smooth(method= "lm", se = FALSE)
+  ggplot(aes(x = hot, y=bloom_doy, color = (str_to_title(location))))+
+  geom_smooth(method = "lm")+
+  theme_minimal()+
+  labs(x= "Number of Hot days", y = "Peak Bloom Date", color = "Location")
+
+grid.arrange(p, q, ncol=2)
 
 ##########     Predicting Average Temperature     ################
 ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #.6431
