@@ -535,15 +535,10 @@ cherrytembin %>%
   facet_grid(cols = vars(str_to_title(location))) +
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
 
-<<<<<<< HEAD
+
 ##############################
 # OLS model: Year by Location#
 ##############################
-=======
-################################
-# OLS model: Year and Location #
-################################
->>>>>>> df9317a2f017dbf55040b18b595e7310409d4e08
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -706,9 +701,6 @@ test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
 #Impute missing data using randomForest and update with proximity matrix:
 train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
 
-train.imputed <- missForest(data.frame(train %>% select(-c("bloom_doy"))))$ximp # NRMSE=0.3165907
-train.imputed <- train.imputed %>% left_join(train %>% select(location, year, bloom_doy), by=c("location", "year"))
-
 rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
 rf.cherry
 
@@ -719,7 +711,7 @@ test.imputed <- test.imputed %>% filter(year==2011)
 yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
   bind_cols(test.imputed,predicted_doy=.)
 
-mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.69 for 2011
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.49 for 2011
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -804,8 +796,8 @@ Results_V3 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results_V3$Abs_diff)
 
-# Dec-Apr sunlight for DC, test error = 122.67
 # Mar sunlight for DC and hot/cold vars, test error = 118.86
+# Dec-Apr sunlight for DC, test error = 122.67
 
 ###################################
 # Building Gradient Boosted Model #
@@ -820,6 +812,7 @@ test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
   mutate(location=factor(location))
 
 #Impute missing data using randomForest and update with proximity matrix:
+set.seed(634)
 train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
 
 test.imputed <- train.imputed %>% bind_rows(test)
@@ -827,6 +820,7 @@ test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))
 test.imputed <- test.imputed %>% filter(year==2011)
 
 #boosting
+set.seed(634)
 boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
                     shrinkage = 0.001)
 summary(boost.cherry) # relative influence plot
@@ -834,7 +828,7 @@ summary(boost.cherry) # relative influence plot
 yhat.boost <- predict(boost.cherry, newdata = test.imputed)%>% 
   bind_cols(test.imputed,predicted_doy=.) %>% left_join(test %>% select(location, year, bloom_doy), by=c("location", "year"))
 
-mean((yhat.boost$predicted_doy-test$bloom_doy)**2) # test mse = 3.68
+mean((yhat.boost$predicted_doy-test$bloom_doy)**2) # test mse = 3.51
 
 # test mse = 74.67 imputing all covariates in test set for 2011-2021
 
@@ -845,10 +839,10 @@ mean((yhat.boost$predicted_doy-test$bloom_doy)**2) # test mse = 3.68
 # 2011 prediction results #
 ###########################
 
-# d=1, test mse=4.66
-# d=2, test mse=3.68
-# d=3, test mse=5.39
-# d=4, test mse=5.70
+# d=1, test mse=4.75
+# d=2, test mse=3.51
+# d=3, test mse=4.73
+# d=4, test mse=4.27
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
@@ -861,11 +855,13 @@ set.seed(634)
 for(i in 2010:2020){
   
   train <- df_final %>% filter(year >= 1950, year <= i, location != 'vancouver') %>%
-    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date, snwd_avg_4, snwd_tot_4)) %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, 
+              bloom_date, snwd_avg_4, snwd_tot_4)) %>%
     mutate(location=factor(location))
   
   test <- df_final %>% filter(year == i + 1, location != 'vancouver') %>%
-    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, bloom_date, snwd_avg_4, snwd_tot_4)) %>%
+    select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_3, sunlight_avg_4, lat, long, 
+              bloom_date, snwd_avg_4, snwd_tot_4)) %>%
     mutate(location=factor(location))
   
   train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
@@ -1419,7 +1415,7 @@ for (i in 1:length(varlist1)){
 Results_forecast <- data.frame()
 
 set.seed(634)
-for(i in 1:10){
+for(i in 1:100){
   
   bloom_forecast <-
     temperature_predictions %>%
