@@ -28,3 +28,26 @@ RNOAA data wrangling and Avg Daily Sunlight (KJ/m^2) ------------------- 26
 
 
 
+
+
+
+
+
+
+
+
+
+
+IMPORTANT ***
+MD - file doesn't look good in GitHub but does look okay in RMD and plain text file if need be.!!! If open project then Readme file looks nice. 
+
+
+
+
+
+
+
+
+
+
+
