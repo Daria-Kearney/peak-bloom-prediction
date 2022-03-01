@@ -47,9 +47,9 @@ cherry:
 
 # Data from RNOAA package
 **historic_data**
-- 1112 obs. of 37 variables
-- location: kyoto, washingtondc, vancouver, liestal
-- year: 812 (for kyoto), 1950(for rest of location) to 2022
+* 1112 obs. of 37 variables
+* location: kyoto, washingtondc, vancouver, liestal
+* year: 812 (for kyoto), 1950(for rest of location) to 2022
 
 - t_max_avg_i = measured in 1/10 C
 - t_max_avg_0- Average max temperature for December 
