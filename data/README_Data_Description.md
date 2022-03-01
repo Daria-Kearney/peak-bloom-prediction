@@ -51,29 +51,29 @@ cherry:
 * location: kyoto, washingtondc, vancouver, liestal
 * year: 812 (for kyoto), 1950(for rest of location) to 2022
 
-- t_max_avg_i = measured in 1/10 C
-- t_max_avg_0- Average max temperature for December 
-- t_max_avg_1- Average max temperature for Jan.
-- t_max_avg_2- Average max temperature for Feb.
-- t_max_avg_3- Average max temperature for March
-- t_max_avg_4- Average max temperature for April
+* t_max_avg_i = measured in 1/10 C
+* t_max_avg_0- Average max temperature for December 
+* t_max_avg_1- Average max temperature for Jan.
+* t_max_avg_2- Average max temperature for Feb.
+* t_max_avg_3- Average max temperature for March
+* t_max_avg_4- Average max temperature for April
 
-- t_min_avg_i = measured in 1/10 C
-- t_min_avg_0- Average min temperature for December 
-- t_min_avg_1- Average min temperature for Jan.
-- t_min_avg_2- Average min temperature for Feb.
-- t_min_avg_3- Average min temperature for March
- -t_min_avg_4- Average min temperature for April
+* t_min_avg_i = measured in 1/10 C
+* t_min_avg_0- Average min temperature for December 
+* t_min_avg_1- Average min temperature for Jan.
+* t_min_avg_2- Average min temperature for Feb.
+* t_min_avg_3- Average min temperature for March
+* t_min_avg_4- Average min temperature for April
 
-- prcp_avg_i = 
-- prcp_avg_0- Average precipitation for December 
-- prcp_avg_1- Average precipitation for Jan.
-- prcp_avg_2- Average precipitation for Feb.
-- prcp_avg_3- Average precipitation for March
-- prcp_avg_4- Average precipitation for April
+* prcp_avg_i = 
+* prcp_avg_0- Average precipitation for December 
+* prcp_avg_1- Average precipitation for Jan.
+* prcp_avg_2- Average precipitation for Feb.
+* prcp_avg_3- Average precipitation for March
+* prcp_avg_4- Average precipitation for April
 
-- prcp_tot_i = 
-- prcp_tot_0- Total precipitation for December 
+* prcp_tot_i = 
+* prcp_tot_0- Total precipitation for December 
 - prcp_tot_1- Total precipitation for Jan.
 - prcp_tot_2- Total precipitation for Feb.
 - prcp_tot_3- Total precipitation for March
