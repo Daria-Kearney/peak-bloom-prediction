@@ -4,56 +4,108 @@
 Through description of all data set in the main R script named "Peak Bloom Prediction"
 
 #Data Sets in the "data" file
-"sunlight.csv""
+## Cleaned Data
+**"sunlight.csv""**
+68 obs. of 7 variables
+location: washingtondc & vancouver
+year - 1979 to 2012
+sunlight_avg_i = measured in (Kj/m^2)
+sunlight _avg_0 - Average sunlight for December 
+sunlight _avg_1- Average sunlight for Jan.
+sunlight _avg_2- Average sunlight for Feb
+sunlight _avg_3 - Average sunlight for March
+sunlight _avg_4- Average sunlight for April
 
-"EPA.csv"
+**"EPA.csv"**
+30 obs. of 13 variables
+year: 1990 to 2019
+Carbon.dioxide
+Methane
+Nitrous.oxide
+HFCs..PFSs..SF6..and.NF3
+Anomaly
+Winter
+Spring
+Summer
+Fall
+Earth.s.surface
+Lower.trosposphere..measured.by.satellite...UAH
+Lower.trosposphere..measured.by.satellite...RSS
 
-"kyoto.csv"
-
-"liestal.csv"
-
-"washingtondc.csv"
-
+**"kyoto.csv"**
+----
+**"liestal.csv"**
+----
+**"washingtondc.csv"**
+---
 #Data Given
 Look at README file given? Can we copy that??
 cherry: washingtondc, liestal & kyoto dataset combined
 
+cherry:
+1062 obs. of 7 variables
 #Data from RNOAA package
+**historic_data**
+1112 obs. of 37 variables
+location: kyoto, washingtondc, vancouver, liestal
+year: 812 (for kyoto), 1950(for rest of location) to 2022
 
+t_max_avg_i = measured in 1/10 C
+t_max_avg_0- Average max temperature for December 
+t_max_avg_1- Average max temperature for Jan.
+t_max_avg_2- Average max temperature for Feb.
+t_max_avg_3- Average max temperature for March
+t_max_avg_4- Average max temperature for April
 
+t_min_avg_i = measured in 1/10 C
+t_min_avg_0- Average min temperature for December 
+t_min_avg_1- Average min temperature for Jan.
+t_min_avg_2- Average min temperature for Feb.
+t_min_avg_3- Average min temperature for March
+t_min_avg_4- Average min temperature for April
 
+prcp_avg_i = 
+prcp_avg_0- Average precipitation for December 
+prcp_avg_1- Average precipitation for Jan.
+prcp_avg_2- Average precipitation for Feb.
+prcp_avg_3- Average precipitation for March
+prcp_avg_4- Average precipitation for April
 
-#External Data Sources
-sunlight
+prcp_tot_i = 
+prcp_tot_0- Total precipitation for December 
+prcp_tot_1- Total precipitation for Jan.
+prcp_tot_2- Total precipitation for Feb.
+prcp_tot_3- Total precipitation for March
+prcp_tot_4- Total precipitation for April
 
+snwd _avg_i = 
+snwd _avg_0- Average snow fall for December 
+snwd _avg_1- Average snow fall for Jan.
+snwd _avg_2- Average snow fall for Feb.
+snwd _avg_3- Average snow fall for March
+snwd _avg_4- Average snow fall for April
 
-EPA
+snwd _tot_i = 
+snwd _tot_0- Total snow fall for December 
+snwd _tot_1- Total snow fall for Jan.
+snwd _tot_2- Total snow fall for Feb.
+snwd _tot_3- Total snow fall for March
+snwd _tot_4- Total snow fall for April
 
+lat
+long
+bloom_date
+bloom_doy
 
-#Other datasets (least important)
-historic_temperatures
-historic_data
-days_max
-days_min
-data
+**historic_temperatures**
+1018 obs. of 4 variables
+location: kyoto, washingtondc, vancouver, liestal
+year: 1950 to 2022
+season: Winter, Spring, Fall, Summer
+tmax_avg: Average maxiumu temperature for the given seasons in in 1/10 C
 
-#Important (Second Important)
-tempall
-temp_all_hot_cold
-temp_exp
-tempseas
-#Dataset created (Most used)
-df_final
-
-
-#List
-
-#Functions
-get_temperature
-get_climatedata
-get_tmax
-get_tmin
-
-
-
-
+**days_max/ days_min**
+location: kyoto, washingtondc, vancouver, liestal
+date: daily dates from 1950-01-01 to 2021-02-28
+tmax: Daily maximum temperature measured in 1/10 C
+tmin: Daily minimum temperature measured in 1/10 C
