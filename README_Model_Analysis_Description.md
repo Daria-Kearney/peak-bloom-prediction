@@ -1,7 +1,7 @@
 # Model Analysis Description for Peak Bloom Prediction #
 
 ## Objective of README file ##
-Assist in the navigation through the main R script names "Peak Bloom Prediction"
+Assist in the navigation through the main R script named "Peak Bloom Prediction"
 
 # **Table of Contents** #                                                                Line Number
 Load Packages and Data
@@ -145,8 +145,10 @@ Generate predicted bloom date for 2022
     
     
 
-IMPORTANT Notes***
+IMPORTANT Notes/ Questions!***
 Change line count!!
 MD - file doesn't look good in GitHub but does look okay in RMD and plain text file if need be.!!! If open project then Readme file looks nice. 
 R notebook bad idea!
+
+- Can we just copy and paste from given README file for the three locaitons?
 
