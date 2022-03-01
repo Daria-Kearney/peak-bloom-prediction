@@ -365,16 +365,6 @@ temp_exp %>%
   stat_qq_line()+
   facet_wrap(~location)
 
-#Line Plot for years vs. bloom Day
-#Used in Powerpoint
-cherry %>% filter(year >= 1950) %>%
-  ggplot(aes(year,bloom_doy, color=location)) +
-  geom_line() +
-  labs(x="Year",
-       y="Days from January 1st",
-       title="Peak Bloom Dates (1950-2021)") +
-  theme_minimal()
-
 ########################################################
 #                EPA Data Exploration                  #
 ########################################################
@@ -1061,7 +1051,7 @@ temp_exp %>%
   facet_wrap(~location, labeller = labeller(location=
     c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title= "QQ Plots for Seasonal Average Temperature", color = "Seasons",
+       title= "Q-Q Plots for Seasonal Average Temperature", color = "Seasons",
   caption= "Figure 5: Quantile-Quantile plots of seasonal average temperature from 1950 to 2020 for four different locations.") +
   scale_colour_manual(labels = c("Spring", "Winter"),
                       values = c("#009e73","#56B4E9")) +
@@ -1221,6 +1211,7 @@ AllHot<- subset(hot.avg, select= predhot.avg) %>%
   bind_cols(hot.pred)
 
 #Line Plot for comparing the three different hot variables for predicting
+#Use in Powerpoint
 AllHot %>%
   filter(seasons=="Spring") %>%
   ggplot(aes(x = year)) + 
@@ -1327,8 +1318,7 @@ q1<- df_final %>%
                      labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5), 
-        plot.caption = element_text(hjust=0))
+  theme(plot.title =element_text(hjust = 0.5))
 
 q2<- df_final %>%
   ggplot(aes(sample= tmax_avg_2, shape = location, color = str_to_title(location))) + 
@@ -1343,8 +1333,7 @@ q2<- df_final %>%
                      labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5), 
-        plot.caption = element_text(hjust=0))
+  theme(plot.title =element_text(hjust = 0.5))
 
 
 q3<- df_final %>%
@@ -1360,8 +1349,7 @@ q3<- df_final %>%
                      labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5), 
-        plot.caption = element_text(hjust=0))
+  theme(plot.title =element_text(hjust = 0.5))
 
 q4<- df_final %>%
   ggplot(aes(sample= tmin_avg_3, shape = location, color = str_to_title(location))) + 
@@ -1376,11 +1364,14 @@ q4<- df_final %>%
                      labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5), 
-        plot.caption = element_text(hjust=0))
+  theme(plot.title =element_text(hjust = 0.5))
+
 #Creating grid of all 4 QQ plots
 plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
-annotate_figure(plot, top= text_grob("QQ Plot", face = "bold", size = 14))
+annotate_figure(plot, top = text_grob("Q-Q Plots for Forecasted Variables", face = "bold", size = 14, just = "center"),
+                bottom = text_grob(
+                  'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
+
 
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
