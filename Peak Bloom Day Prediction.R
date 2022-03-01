@@ -244,8 +244,9 @@ cherry %>%
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
   scale_x_continuous(breaks = seq(1880, 2020, by = 20)) +
-  facet_grid(cols = vars(str_to_title(location))) +
-  labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Bloom Days vs. Year grouped by Location")
 
 #Line Plot for years vs. Bloom Day
 #Use in Powerpoint
@@ -300,7 +301,8 @@ historic_temperatures %>%
   aes(year, tmax_avg) + 
   geom_line() +
   xlim(1950, 2031) +
-  labs(x = "Year", y = "Average maximum temperature (1/10 ?C)") +
+  labs(x = "Year", y = "Average maximum temperature (1/10 °C)",
+       title = "Average Max Temperature vs. Year") +
   facet_grid(factor(season) ~ str_to_title(location))
 
 #Sunlight only looks promising for March
@@ -309,7 +311,8 @@ df_final %>%
   ggplot(aes(x = sunlight_avg_3, y = bloom_doy)) +
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
-  labs(x = "Sunlight in Mar (Kj/m^2)", y = "Peak bloom (days since Jan 1st)")
+  labs(x = "Sunlight in Mar (Kj/m^2)", y = "Peak bloom (days since Jan 1st)",
+       title= "Bloom Day vs. Average Sunlight in March")
 
 ############### Statistic Summaries ################
 cor(df_final$bloom_doy, df_final$sunlight_avg_0, use="complete.obs") # -0.27
@@ -330,35 +333,48 @@ df_final %>%
   ggplot(aes(x = tmax_avg_2, y = bloom_doy)) +
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
-  facet_grid(cols = vars(str_to_title(location))) +
-  labs(x = "TMAX Avg in Feb", y = "Peak bloom (days since Jan 1st)")
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  labs(x = "Average Max Temperature in Feb. (1/10 °C)", y = "Peak bloom (days since Jan 1st)",
+       title= "Bloom Day vs. Average Maximum Temperature in Feb. by Location")
 
 df_final %>%
   filter(year >= 1880, location != 'vancouver') %>%
   ggplot(aes(x = tmax_avg_3, y = bloom_doy)) +
   geom_point() +
   geom_step(linetype = 'dotted', color = 'gray50') +
-  facet_grid(cols = vars(str_to_title(location))) +
-  labs(x = "TMAX Avg in Mar", y = "Peak bloom (days since Jan 1st)")
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  labs(x = "Average Max Temperature in March (1/10 °C)", y = "Peak bloom (days since Jan 1st)", 
+       title ="Peak Bloom Day vs. Average Max Temperature in March by Location")
 
 #Look at all years for different locations and seasons
 temp_exp %>% filter() %>%
   ggplot(aes(x= tavg)) + 
   geom_histogram(aes(fill=seasons))+
-  facet_wrap(~location + seasons)
+  labs(x = "Average Temperature (1/10 °C)", y = "Count", 
+       title = "Distribution of Average Temperature grouped by Location and Season", fill = "Seasons") +
+  facet_wrap(~location +seasons, labeller = labeller(location=
+   c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))
 
 #Look at 2019-2020 for locations and grouped by seasons
 temp_exp %>% filter(year>= 2019) %>%
   ggplot(aes(x= tavg)) + 
+  labs(x = "Average Temperature (1/10 °C)", y = "Count", title = "Distribution of Average Temperature grouped by Location and Season for 2019", fill= "Seasons")+
   geom_histogram(aes(fill=seasons))+
-  facet_wrap(~location + year)
+  facet_wrap(~location +seasons, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))
 
 #All QQ plots for all 4 locations daily average temp.
 temp_exp %>%
   ggplot(aes(sample= tavg, color = seasons)) + 
   stat_qq()+
   stat_qq_line()+
-  facet_wrap(~location)
+  labs(x = "Theoretical Quantiles", y="Standarized residuals", title = "Q-Q plot of Daily Average Temperature grouped 
+                         by Location and Season",
+       color = "Seasons")+
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))
 
 ########################################################
 #                EPA Data Exploration                  #
@@ -521,9 +537,12 @@ cherrytembin %>%
   ggplot(aes(x = year, y = predicted_doy)) +
   geom_line() +
   geom_point(aes(y = bloom_doy)) +
-  facet_grid(cols = vars(str_to_title(location))) +
-  labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
-
+  labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Comparing Actual vs. Predicted Bloom Days", 
+  caption = "Figure 7: This is a scatterplot on actual bloom day and line plot of predicted bloom days
+ use the linear regression model.")+
+  facet_wrap(~location, labeller = labeller(location=
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  theme(plot.caption = element_text(hjust=0))
 
 #############
 # OLS Model #
@@ -1290,7 +1309,6 @@ complete_df<- full_join(df_final, Predict, by = c("year", "location"))
 # MC simulation to forecast remaining covariates and 2023-2031 bloom dates #
 ############################################################################
 #QQplot for Normality
-#Use in Powerpoint
 q1<- df_final %>%
   ggplot(aes(sample= tmax_avg_3, shape = location, color = str_to_title(location))) + 
   stat_qq()+
