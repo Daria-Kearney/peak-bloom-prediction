@@ -3,7 +3,7 @@
 ## Objective of README file ##
 Assist in the navigation through the main R script names "Peak Bloom Prediction"
 
-# **Table of Contents** #                                                                          Line Number
+# **Table of Contents** #                                                                Line Number
 Load Packages and Data
     Library ---------------------------------------------------------------------------------- 5
     Load cherry data ------------------------------------------------------------------------ 20
@@ -143,18 +143,10 @@ Generate predicted bloom date for 2022
     Output data created ------------------------------------------------------------------- 1491
      
     
+    
 
 IMPORTANT Notes***
 Change line count!!
 MD - file doesn't look good in GitHub but does look okay in RMD and plain text file if need be.!!! If open project then Readme file looks nice. 
 R notebook bad idea!
-
-
-
-
-
-
-
-
-
 
