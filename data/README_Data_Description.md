@@ -47,16 +47,16 @@ cherry:
 
 # Data from RNOAA package
 **historic_data**
--1112 obs. of 37 variables
--location: kyoto, washingtondc, vancouver, liestal
--year: 812 (for kyoto), 1950(for rest of location) to 2022
+- 1112 obs. of 37 variables
+- location: kyoto, washingtondc, vancouver, liestal
+- year: 812 (for kyoto), 1950(for rest of location) to 2022
 
--t_max_avg_i = measured in 1/10 C
--t_max_avg_0- Average max temperature for December 
--t_max_avg_1- Average max temperature for Jan.
--t_max_avg_2- Average max temperature for Feb.
--t_max_avg_3- Average max temperature for March
--t_max_avg_4- Average max temperature for April
+- t_max_avg_i = measured in 1/10 C
+- t_max_avg_0- Average max temperature for December 
+- t_max_avg_1- Average max temperature for Jan.
+- t_max_avg_2- Average max temperature for Feb.
+- t_max_avg_3- Average max temperature for March
+- t_max_avg_4- Average max temperature for April
 
 t_min_avg_i = measured in 1/10 C
 t_min_avg_0- Average min temperature for December 
