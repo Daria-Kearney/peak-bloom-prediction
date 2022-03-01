@@ -1310,12 +1310,12 @@ q1<- df_final %>%
   stat_qq()+
   stat_qq_line()+
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title = "Max Average Temp in March")+
+       title = "Average Max. Temperature in March")+
   scale_color_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
   scale_shape_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
@@ -1325,12 +1325,12 @@ q2<- df_final %>%
   stat_qq()+
   stat_qq_line()+
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title = "Max Average Temp in Feb.")+
+       title = "Average Max. Temperature in Feb.")+
   scale_color_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
   scale_shape_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
@@ -1341,12 +1341,12 @@ q3<- df_final %>%
   stat_qq()+
   stat_qq_line() + 
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title = "Average Snow Fall for Feb.")+
+       title = "Average Snow Fall in Feb.")+
   scale_color_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
   scale_shape_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
@@ -1356,12 +1356,12 @@ q4<- df_final %>%
   stat_qq()+
   stat_qq_line()+
   labs(x = "Theoretical Quantiles", y="Standarized residuals",
-       title = "Min Average Temp for March", color = "Location")+
+       title = "Average Min. Temperature in March", color = "Location")+
   scale_color_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c("#D55E00", "#009E73", "#56B4E9", "#CC79A7")) + 
   scale_shape_manual(name= "Location",
-                     labels= c("Kyoto", "Liestal", 'Vancouver', "Washington D.C."),
+                     labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
@@ -1371,7 +1371,6 @@ plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend =
 annotate_figure(plot, top = text_grob("Q-Q Plots for Forecasted Variables", face = "bold", size = 14, just = "center"),
                 bottom = text_grob(
                   'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
-
 
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
