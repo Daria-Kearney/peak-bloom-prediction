@@ -92,7 +92,7 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Washington DC  1948-2021             1921-2021
 # Vancouver      1957-2022             N/A
 
-sunlight <- read.csv("data/avg daily sunlight_dc and whatcom county wa.csv")
+sunlight <- read.csv("data/sunlight.csv")
 #str(sunlight)
 #head(sunlight[sunlight$Month.Code==12,])
 sunlight <- sunlight %>% mutate(month = ifelse(Month.Code==12, 0, Month.Code),
@@ -200,7 +200,7 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 # Load EPA Data & Manipulation #
 ################################
 
-EPA <- read.csv("data/combined_EPA_dataset_JS.csv")
+EPA <- read.csv("data/EPA.csv")
 
 ###### Data Manipulation #######
 
