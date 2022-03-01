@@ -1441,7 +1441,7 @@ for (i in 1:length(varlist1)){
 Results_forecast <- data.frame()
 
 set.seed(634)
-for(i in 1:100){
+for(i in 1:1000){
   
   bloom_forecast <-
     temperature_predictions %>%
@@ -1508,6 +1508,6 @@ output <- Results_forecast %>% group_by(location, year) %>%
   rbind(predictions.2022 %>% select(location, year, predicted_doy)) %>%
   rbind(predictions.2022.dc %>% select(location, year, predicted_doy))
 
-#write.csv(output, file='forecast_100.csv')
+#write.csv(output, file='forecast_1000.csv')
 
 
