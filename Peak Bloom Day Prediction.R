@@ -1157,7 +1157,7 @@ predict %>%
   geom_line()+ 
   geom_point(aes(y=avgt)) +
   facet_grid(factor(seasons) ~ str_to_title(location))+
-  labs(x = "Year", y = "Average Temperature")
+  labs(x = "Year", y = "Average Temperature (1/10 °C)")
 
 ##########  Using Predicted Average Temp to Predict Hot Covariate  ################
 
@@ -1183,8 +1183,11 @@ pred.hot %>%
   ggplot(aes(x = year, y=predicted_hot)) +
   geom_line()+ 
   geom_point(aes(y=hot)) +
-  facet_grid(cols = vars(str_to_title(location)))+
-  labs(x = "Year", y = "Number of Days (Hot)")
+  facet_grid(vars(location), labeller = labeller(location=
+   c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  labs(x = "Year", y = "Number of Hot Days",
+       title="Scatterplot of Predicted Hot vs. Actual Hot 
+       by Location Using the Predicted Average Temperature.")
 
 #### Using the actual average temp to compare to the actual to predicted hot ####
 
@@ -1197,8 +1200,11 @@ pred.hot.avg %>%
   ggplot(aes(x = year, y=predicted_hot)) +
   geom_line()+ 
   geom_point(aes(y=hot)) +
-  facet_grid(cols = vars(str_to_title(location)))+
-  labs(x = "Year", y = "Number of Days (Hot)")
+  facet_grid(vars(location), labeller = labeller(location=
+  c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  labs(x = "Year", y = "Number of Hot Days",
+       title = "Scatterplot of Predicted Hot vs. Actual Hot by Location
+       Using the Actual Average Temperature")
 
 ##########  Plot Line Graph of ALL the Hot Variables  ################
 #Three hot variables using three different techniques 
@@ -1228,7 +1234,7 @@ AllHot %>%
   geom_line(aes(y= predavg.predhot, color ="Predict Hot|
   Predicted Temp.")) + 
   facet_grid(vars(location), labeller = labeller(location=
-                                                   c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+    c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
   scale_color_manual(name= "Methods",
                      labels= c("Actual Hot Value", "Predicted Hot Value", "Predict Hot|Predicted Temp."),
                      values=c("#D55E00", "#009E73", "#56B4E9")) + 
