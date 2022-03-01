@@ -1226,9 +1226,19 @@ AllHot %>%
   ggplot(aes(x = year)) + 
   geom_line(aes(y =hot, color= "Actual Hot Value")) +
   geom_line(aes(y= predhot.avg, color ="Predicted Hot Value"))+
-  geom_line(aes(y= predavg.predhot, color ="Predict Hot|Predicted Temp.")) + 
-  facet_grid(vars(str_to_title(location)))+
-  labs(x = "Year", y = "Number of Days", color = "Methods", title = "Line Plot of Hot Values")
+  geom_line(aes(y= predavg.predhot, color ="Predict Hot|
+  Predicted Temp.")) + 
+  facet_grid(vars(location), labeller = labeller(location=
+                                                   c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
+  scale_color_manual(name= "Methods",
+                     labels= c("Actual Hot Value", "Predicted Hot Value", "Predict Hot|Predicted Temp."),
+                     values=c("#D55E00", "#009E73", "#56B4E9")) + 
+  labs(x = "Year", y = "Number of Hot Days", color = "Methods", 
+       title = "Line Plot of Number of Hot Days Given Methods of Predictions", 
+       captions= "Figure 7: Line plot comparing the three different methods of predicting the number of hot days.")+
+  theme_minimal()+
+  theme(legend.key.size = unit(.5, "cm"), legend.key.height = unit(.5, "cm"), 
+        legend.key.width = unit(1, "cm"), legend.text = element_text(size =8))
 
 ########  Predicting cold variable in a multiple linear regression  ############
 ls_fitcold<- lm(cold~ I(year>=1975)*I(location== "liestal")+ seasons, data = complete)
@@ -1369,7 +1379,8 @@ q4<- df_final %>%
   theme(plot.title =element_text(hjust = 0.5), 
         plot.caption = element_text(hjust=0))
 #Creating grid of all 4 QQ plots
-ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
+plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
+annotate_figure(plot, top= text_grob("QQ Plot", face = "bold", size = 14))
 
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
