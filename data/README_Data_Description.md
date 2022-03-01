@@ -3,10 +3,21 @@
 ## Objective of README file ##
 Through description of all data set in the main R script named "Peak Bloom Prediction"
 
+#Data Sets in the "data" file
+"sunlight.csv""
+
+"EPA.csv"
+
+"kyoto.csv"
+
+"liestal.csv"
+
+"washingtondc.csv"
+
 #Data Given
 Look at README file given? Can we copy that??
-
 cherry: washingtondc, liestal & kyoto dataset combined
+
 #Data from RNOAA package
 
 
