@@ -1,2 +1,6 @@
 # Cherry Blossom Peak Bloom Prediction
-##Talk about how to navigate the R script and talk about layout
+
+## Objective of README file
+Assist in the navigation through the main R script names "Peak Bloom Prediction"
+
+#Table of Content
