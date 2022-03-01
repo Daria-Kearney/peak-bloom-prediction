@@ -23,7 +23,7 @@ cherry <- read.csv("data/washingtondc.csv") %>%
   bind_rows(read.csv("data/kyoto.csv"))
 
 ########################################################
-# RNOAA data wrangling and Avg Daily Sunlight (KJ/m^2) #
+# RNOAA Data Wrangling and Avg Daily Sunlight (KJ/m^2) #
 ########################################################
 
 #Distance from Vancouver airport to maple grove park
@@ -92,7 +92,6 @@ historic_data <- historic_data %>% full_join(cherry, by = c("location", "year"))
 # Washington DC  1948-2021             1921-2021
 # Vancouver      1957-2022             N/A
 
-
 sunlight <- read.csv("data/avg daily sunlight_dc and whatcom county wa.csv")
 #str(sunlight)
 #head(sunlight[sunlight$Month.Code==12,])
@@ -112,7 +111,7 @@ df_final %>% group_by(location) %>% summarise(initial_year = min(year), final_ye
 sapply(df_final, function(x) sum(is.na(x)))
 
 #####################################################
-#  RNOAA data wrangling for Hot and Cold Covariates #
+#  RNOAA Data Wrangling for Hot and Cold Covariates #
 #####################################################
 
 #Getting tmax data for 1950-2021
@@ -197,15 +196,13 @@ str(temp_all_hot_cold)
 #Aggregating data so that it is by location and have just one row for each year for all locations
 temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN= sum)
 
-#######################
-# Load EPA & NPN Data #
-#######################
+################################
+# Load EPA Data & Manipulation #
+################################
 
 EPA <- read.csv("data/combined_EPA_dataset_JS.csv")
 
-#########################
-#   Data Manipulation   # 
-#########################
+###### Data Manipulation #######
 
 # Find the minimum year of available data, bind to cherry dataset by that year 
 min(EPA$year)
@@ -236,9 +233,9 @@ names(data)[18:19] <- c("UAH","RSS")
 # Removing data that isn't relevant
 data1 <- select(data,!c("lat","long","bloom_date"))
 
-############################
-# Plots and visualizations #
-############################
+########################################
+# Preliminary Plots and Visualizations #
+########################################
 
 # Line plot by location of peak bloom days vs. year
 cherry %>% 
@@ -266,7 +263,7 @@ cherry %>% filter(year >= 1950) %>%
   theme(plot.title =element_text(hjust = 0.5), 
         plot.caption = element_text(hjust=0)) 
 
-#Scatterplot of Average Tmax by Months vs Peak Bloom Date by Location
+#Scatterplot of Average Tmax by Months vs Peak Bloom Date 
 #Use in Powerpoint
 overlayline<- df_final %>%
   group_modify(function (.x, .y){
@@ -350,9 +347,7 @@ temp_exp %>% filter() %>%
   geom_histogram(aes(fill=seasons))+
   facet_wrap(~location + seasons)
 
-#Use the example to look at the average temp in the for the 3 locations for the seasons
-
-#Look at 2019-2020 for locations and split by seasons
+#Look at 2019-2020 for locations and grouped by seasons
 temp_exp %>% filter(year>= 2019) %>%
   ggplot(aes(x= tavg)) + 
   geom_histogram(aes(fill=seasons))+
@@ -405,7 +400,7 @@ liestal <- data1 %>% filter(location=="liestal")
 
 liestal1 <- select(liestal,-c(location,alt))
 
-#Principal Components Analysis for Kyoto
+#Principal Components Analysis for Liestal
 pr.liestal <- prcomp(liestal1,scale=TRUE)
 pr.liestal$rotation
 par(mfrow=c(1,3))
@@ -530,10 +525,10 @@ cherrytembin %>%
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)")
 
 
-##############################
-# OLS model: Year by Location#
-##############################
-
+#############
+# OLS Model #
+#############
+### OLS Model: Year by Location ####
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
 iterations = 33
@@ -589,10 +584,7 @@ Results %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results$Abs_diff) # test error = 201.46
 
-#############################################
-# OLS model: Spring and Winter avg max temp #
-#############################################
-
+#### OLS Model: Spring and Winter avg max temp #### 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
 iterations = 33
@@ -664,9 +656,7 @@ Results_V2 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results_V2$Abs_diff) # test error = 196.26
 
-########################
-# Comparing OLS models #
-########################
+######################### Comparing OLS models #########################
 
 out1 <- Results %>% group_by(Year) %>% summarise(Total_diff_v1=sum(Abs_diff))
 out2 <- Results_V2 %>% group_by(Year) %>% summarise(Total_diff_v2=sum(Abs_diff))
