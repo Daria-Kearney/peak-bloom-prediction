@@ -693,6 +693,7 @@ test <- df_final %>% filter(year == 2011, location != 'vancouver') %>%
   mutate(location=factor(location))
 
 #Impute missing data using randomForest and update with proximity matrix:
+set.seed(634)
 train.imputed <- rfImpute(bloom_doy~., data=train, mtry=10, ntree=500) #iter=5 is default number of imputation updates
 
 rf.cherry <- randomForest(bloom_doy~., data=train.imputed, mtry=10, importance=TRUE, ntree=5000, proximity=TRUE)
@@ -705,7 +706,7 @@ test.imputed <- test.imputed %>% filter(year==2011)
 yhat.rf <- predict(rf.cherry, newdata = test.imputed) %>% 
   bind_cols(test.imputed,predicted_doy=.)
 
-mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.49 for 2011
+mean((yhat.rf$predicted_doy-test$bloom_doy)**2) # test mse = 7.94 for 2011
 
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
