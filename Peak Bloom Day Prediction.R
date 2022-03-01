@@ -820,9 +820,7 @@ mean((yhat.boost$predicted_doy-test$bloom_doy)**2) # test mse = 3.51
 #sum(abs(yhat.boost$predicted_doy-yhat.boost$bloom_doy))
 # test mas = 234.81 imputing all covariates in test set for 2011-2021
 
-###########################
-# 2011 prediction results #
-###########################
+############################ 2011 prediction results ############################
 
 # d=1, test mse=4.75
 # d=2, test mse=3.51
@@ -1169,7 +1167,7 @@ pred.hot %>%
   facet_grid(cols = vars(str_to_title(location)))+
   labs(x = "Year", y = "Number of Days (Hot)")
 
-#### Using the the actual average temp to compare to the actual to predicted hot ####
+#### Using the actual average temp to compare to the actual to predicted hot ####
 
 pred.hot.avg<- predict %>% 
   bind_cols(predicted_hot = round(predict(ls_hot, newdata= predict)))
@@ -1250,7 +1248,7 @@ DF<- DF %>%
   mutate(avgt = pavgt) %>%
   bind_cols(phot=(predict(ls_hot, newdata = .)))
 
-##############  Cold Prediction Forecasting  ####################
+# Cold Prediction Forecasting
 
 DF<- DF %>%
   bind_cols(pcold=(predict(ls_fitcold, newdata= DF)))
@@ -1287,9 +1285,6 @@ Predict<- Predict %>%
 df_final<- select(df_final, -c("cold", "hot"))
 
 complete_df<- full_join(df_final, Predict, by = c("year", "location"))
-
-################################################################################
-################################################################################
 
 ############################################################################
 # MC simulation to forecast remaining covariates and 2023-2031 bloom dates #
@@ -1362,7 +1357,7 @@ plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend =
 annotate_figure(plot, top = text_grob("Q-Q Plots for Forecasted Variables", face = "bold", size = 14, just = "center"),
                 bottom = text_grob(
                   'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
-
+#Forecast
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
             sunlight_avg_4, snwd_tot_4, snwd_avg_4, cold, tavg))
@@ -1471,8 +1466,10 @@ for(i in 1:1000){
   
 }
 
+##########################################
+# Generate predicted bloom date for 2022 #
+##########################################
 
-# Generate predicted bloom date for 2022
 df.past <- complete_df %>% filter(year >= 1950, year <= 2022) %>%
   select(-c(sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, sunlight_avg_4, lat, long, bloom_date,
             snwd_avg_4, snwd_tot_4, cold, tavg, bloom_doy)) %>%
