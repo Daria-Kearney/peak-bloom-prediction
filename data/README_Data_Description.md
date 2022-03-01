@@ -58,57 +58,56 @@ cherry:
 - t_max_avg_3- Average max temperature for March
 - t_max_avg_4- Average max temperature for April
 
-t_min_avg_i = measured in 1/10 C
-t_min_avg_0- Average min temperature for December 
-t_min_avg_1- Average min temperature for Jan.
-t_min_avg_2- Average min temperature for Feb.
-t_min_avg_3- Average min temperature for March
-t_min_avg_4- Average min temperature for April
+- t_min_avg_i = measured in 1/10 C
+- t_min_avg_0- Average min temperature for December 
+- t_min_avg_1- Average min temperature for Jan.
+- t_min_avg_2- Average min temperature for Feb.
+- t_min_avg_3- Average min temperature for March
+ -t_min_avg_4- Average min temperature for April
 
-prcp_avg_i = 
-prcp_avg_0- Average precipitation for December 
-prcp_avg_1- Average precipitation for Jan.
-prcp_avg_2- Average precipitation for Feb.
-prcp_avg_3- Average precipitation for March
-prcp_avg_4- Average precipitation for April
+- prcp_avg_i = 
+- prcp_avg_0- Average precipitation for December 
+- prcp_avg_1- Average precipitation for Jan.
+- prcp_avg_2- Average precipitation for Feb.
+- prcp_avg_3- Average precipitation for March
+- prcp_avg_4- Average precipitation for April
 
-prcp_tot_i = 
-prcp_tot_0- Total precipitation for December 
-prcp_tot_1- Total precipitation for Jan.
-prcp_tot_2- Total precipitation for Feb.
-prcp_tot_3- Total precipitation for March
-prcp_tot_4- Total precipitation for April
+- prcp_tot_i = 
+- prcp_tot_0- Total precipitation for December 
+- prcp_tot_1- Total precipitation for Jan.
+- prcp_tot_2- Total precipitation for Feb.
+- prcp_tot_3- Total precipitation for March
+- prcp_tot_4- Total precipitation for April
 
-snwd _avg_i = 
-snwd _avg_0- Average snow fall for December 
-snwd _avg_1- Average snow fall for Jan.
-snwd _avg_2- Average snow fall for Feb.
-snwd _avg_3- Average snow fall for March
-snwd _avg_4- Average snow fall for April
+- snwd _avg_i = 
+- snwd _avg_0- Average snow fall for December 
+- snwd _avg_1- Average snow fall for Jan.
+- snwd _avg_2- Average snow fall for Feb.
+- snwd _avg_3- Average snow fall for March
+- snwd _avg_4- Average snow fall for April
 
-snwd _tot_i = 
-snwd _tot_0- Total snow fall for December 
-snwd _tot_1- Total snow fall for Jan.
-snwd _tot_2- Total snow fall for Feb.
-snwd _tot_3- Total snow fall for March
-snwd _tot_4- Total snow fall for April
+- snwd _tot_i = 
+- snwd _tot_0- Total snow fall for December 
+- snwd _tot_1- Total snow fall for Jan.
+- snwd _tot_2- Total snow fall for Feb.
+- snwd _tot_3- Total snow fall for March
+- snwd _tot_4- Total snow fall for April
 
-lat
-long
-bloom_date
-bloom_doy
+- lat
+- long
+- bloom_date
+- bloom_doy
 
 **historic_temperatures**
-
 1018 obs. of 4 variables
-location: kyoto, washingtondc, vancouver, liestal
-year: 1950 to 2022
-season: Winter, Spring, Fall, Summer
-tmax_avg: Average maxiumu temperature for the given seasons in in 1/10 C
+- location: kyoto, washingtondc, vancouver, liestal
+- year: 1950 to 2022
+- season: Winter, Spring, Fall, Summer
+- tmax_avg: Average maxiumu temperature for the given seasons in in 1/10 C
 
-**days_max/ days_min**
-
-location: kyoto, washingtondc, vancouver, liestal
-date: daily dates from 1950-01-01 to 2021-02-28
-tmax: Daily maximum temperature measured in 1/10 C
-tmin: Daily minimum temperature measured in 1/10 C
+**days_max & days_min**
+~90900 obs. 3 variables
+- location: kyoto, washingtondc, vancouver, liestal
+- date: daily dates from 1950-01-01 to 2021-02-28
+- tmax: Daily maximum temperature measured in 1/10 C
+- tmin: Daily minimum temperature measured in 1/10 C
