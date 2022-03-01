@@ -47,16 +47,16 @@ cherry:
 
 # Data from RNOAA package
 **historic_data**
-1112 obs. of 37 variables
-location: kyoto, washingtondc, vancouver, liestal
-year: 812 (for kyoto), 1950(for rest of location) to 2022
+*1112 obs. of 37 variables
+*location: kyoto, washingtondc, vancouver, liestal
+*year: 812 (for kyoto), 1950(for rest of location) to 2022
 
-t_max_avg_i = measured in 1/10 C
-t_max_avg_0- Average max temperature for December 
-t_max_avg_1- Average max temperature for Jan.
-t_max_avg_2- Average max temperature for Feb.
-t_max_avg_3- Average max temperature for March
-t_max_avg_4- Average max temperature for April
+*t_max_avg_i = measured in 1/10 C
+*t_max_avg_0- Average max temperature for December 
+*t_max_avg_1- Average max temperature for Jan.
+*t_max_avg_2- Average max temperature for Feb.
+*t_max_avg_3- Average max temperature for March
+*t_max_avg_4- Average max temperature for April
 
 t_min_avg_i = measured in 1/10 C
 t_min_avg_0- Average min temperature for December 
@@ -99,6 +99,7 @@ bloom_date
 bloom_doy
 
 **historic_temperatures**
+
 1018 obs. of 4 variables
 location: kyoto, washingtondc, vancouver, liestal
 year: 1950 to 2022
@@ -106,6 +107,7 @@ season: Winter, Spring, Fall, Summer
 tmax_avg: Average maxiumu temperature for the given seasons in in 1/10 C
 
 **days_max/ days_min**
+
 location: kyoto, washingtondc, vancouver, liestal
 date: daily dates from 1950-01-01 to 2021-02-28
 tmax: Daily maximum temperature measured in 1/10 C
