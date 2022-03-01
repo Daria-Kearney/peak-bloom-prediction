@@ -3,7 +3,7 @@
 ## Objective of README file ##
 Through description of all data set in the main R script named "Peak Bloom Prediction"
 
-#Data Sets in the "data" file
+# Data Sets in the "data" file
 ## Cleaned Data
 **"sunlight.csv""**
 68 obs. of 7 variables
@@ -38,13 +38,14 @@ Lower.trosposphere..measured.by.satellite...RSS
 ----
 **"washingtondc.csv"**
 ---
-#Data Given
+# Data Given
 Look at README file given? Can we copy that??
 cherry: washingtondc, liestal & kyoto dataset combined
 
 cherry:
 1062 obs. of 7 variables
-#Data from RNOAA package
+
+# Data from RNOAA package
 **historic_data**
 1112 obs. of 37 variables
 location: kyoto, washingtondc, vancouver, liestal
