@@ -26,31 +26,19 @@ Source: https://www.epa.gov/climate-indicators/weather-climate
 
 30 obs. of 13 variables
 
-year: 1990 to 2019
-
-Carbon.dioxide- measured parts-per-million (ppm)
-
-Methane - measured parts-per-million (ppm)
-
-Nitrous.oxide - measured parts-per-million (ppm)
-
-HFCs..PFSs..SF6..and.NF3
-
-Anomaly
-
-Winter
-
-Spring
-
-Summer
-
-Fall
-
-Earth.s.surface - Earth surface temperatures measured in temperature anomaly (°F)
-
-Lower.trosposphere..measured.by.satellite...UAH l
-
-Lower.trosposphere..measured.by.satellite...RSS
+* year: 1990 to 2019
+* Carbon.dioxide- measured parts-per-million (ppm)
+* Methane - measured parts-per-million (ppm)
+* Nitrous.oxide - measured parts-per-million (ppm)
+* HFCs..PFSs..SF6..and.NF3
+* Anomaly
+* Winter
+* Spring
+* Summer
+* Fall
+* Earth.s.surface - Earth surface temperatures measured in temperature anomaly (°F)
+* Lower.trosposphere..measured.by.satellite...UAH l
+* Lower.trosposphere..measured.by.satellite...RSS
 
 # Data Given
 **"kyoto.csv"**
