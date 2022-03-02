@@ -6,23 +6,19 @@ Through description of all data set in the main R script named "Peak Bloom Predi
 # Data Sets in the "data" file
 ## Cleaned Data
 **"sunlight.csv""**
+
 Source: https://wonder.cdc.gov/nasa-insolar.html
 
 68 obs. of 7 variables: 
 
 * location: washingtondc & vancouver
-
 * year - 1979 to 2012
 * sunlight_avg_i = measured in (Kj/m^2)
 * sunlight _avg_0 - Average sunlight for December 
-
-*sunlight _avg_1- Average sunlight for Jan.
-
-*sunlight _avg_2- Average sunlight for Feb
-
-*sunlight _avg_3 - Average sunlight for March
-
-*sunlight _avg_4- Average sunlight for April
+* sunlight _avg_1- Average sunlight for Jan.
+* sunlight _avg_2- Average sunlight for Feb
+* sunlight _avg_3 - Average sunlight for March
+* sunlight _avg_4- Average sunlight for April
 
 **"EPA.csv"**
 
