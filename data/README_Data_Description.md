@@ -64,10 +64,11 @@ _Taken from the peak-bloom-prediction main GitHub README file_
 
 # Data from RNOAA package
 **"historic_data"**
-* 1112 obs. of 37 variables
+
+1112 obs. of 37 variables
+
 * location: kyoto, washingtondc, vancouver, liestal
 * year: 812 (for kyoto), 1950 (for rest of location) to 2022
-
 * t_max_avg_i = Average maximum temperature measured in 1/10 °C
 * t_max_avg_0- Average max temperature for December 
 * t_max_avg_1- Average max temperature for Jan.
