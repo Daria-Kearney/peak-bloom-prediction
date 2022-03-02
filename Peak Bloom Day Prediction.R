@@ -202,7 +202,7 @@ temp_all_hot_cold= aggregate(. ~ year + location, data = temp_all_hot_cold, FUN=
 
 EPA <- read.csv("data/EPA.csv")
 
-###### Data Manipulation #######
+######  Data Manipulation  ######
 
 # Find the minimum year of available data, bind to cherry dataset by that year 
 min(EPA$year)
@@ -249,7 +249,7 @@ cherry %>%
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Bloom Days vs. Year grouped by Location")
 
 #Line Plot for years vs. Bloom Day
-#Use in Powerpoint
+
 cherry %>% filter(year >= 1950) %>%
   ggplot(aes(year,bloom_doy, color=location)) +
   geom_line(aes(),size =.8) +
@@ -264,8 +264,8 @@ cherry %>% filter(year >= 1950) %>%
   theme(plot.title =element_text(hjust = 0.5), 
         plot.caption = element_text(hjust=0)) 
 
-#Scatterplot of Average Tmax by Months vs Peak Bloom Date 
-#Use in Powerpoint
+##### Scatterplot of Average Tmax by Months vs Peak Bloom Date #####
+
 overlayline<- df_final %>%
   group_modify(function (.x, .y){
     avg1_ls<- lm(bloom_doy~ tmax_avg_1, data =df_final)
@@ -314,7 +314,7 @@ df_final %>%
   labs(x = "Sunlight in Mar (Kj/m^2)", y = "Peak bloom (days since Jan 1st)",
        title= "Bloom Day vs. Average Sunlight in March")
 
-############### Statistic Summaries ################
+###############  Statistic Summaries  ###############
 cor(df_final$bloom_doy, df_final$sunlight_avg_0, use="complete.obs") # -0.27
 cor(df_final$bloom_doy, df_final$sunlight_avg_1, use="complete.obs") # -.32
 cor(df_final$bloom_doy, df_final$sunlight_avg_2, use="complete.obs") # -.07
@@ -385,7 +385,7 @@ dc <- data1 %>% filter(location=="washingtondc")
 # Removing altitude since it is zero and can't be scaled
 dc1 <- select(dc,-c(location,alt))
 
-########  Principal Components Analysis ############
+###########  Principal Components Analysis  ###########
 
 #Principal Components Analysis for Washingtondc
 pr.dc <- prcomp(dc1,scale=TRUE)
@@ -424,7 +424,7 @@ biplot(pr.dc,scale=0)
 biplot(pr.kyoto,scale=0)
 biplot(pr.liestal,scale=0)
 
-#################### Linear regression ############################
+####################  Linear regression  ####################
 #Using uncorrelated variables: nitrous oxide, methane,carbon dioxide
 ls_fit.epa <- lm(bloom_doy ~ Carbon.dioxide + Methane + Nitrous.oxide +
                    location * year, data = data1)
@@ -444,12 +444,13 @@ predictions.epa %>%
   ggplot(aes(x = bloom_doy, y = predicted_doy,
              color=location)) +
   geom_point() +
-  labs(x = "Bloom Day Since Jan 1st", y = "Predicted Peak Day Since Jan 1st")
+  labs(x = "Bloom Day Since Jan 1st", y = "Predicted Peak Day Since Jan 1st",
+       title = "Scatterplot of Predicted bloom day vs. actual bloom day")
 
 # Predictive error
 mean(abs(predictions.epa$predicted_doy - predictions.epa$bloom_doy)/predictions.epa$bloom_doy)*100
 
-###################### Time Series Analysis #############################
+######################  Time Series Analysis  ######################
 options(scipen = 100)
 # Estimating linear trend in all locations, prior to 2000 for forecasting
 kyoto <- dplyr::filter(cherry,location=="kyoto",year<2000)
@@ -469,7 +470,7 @@ summary(tfit_k <- lm(kyoto_bloom ~ trend_k))
 summary(tfit_l <- lm(liestal_bloom ~ trend_l))
 summary(tfit_dc <- lm(dc_bloom ~ trend_dc))
 
-#### Plots for Time Series for all three locations ######
+####  Plots for Time Series for all three locations  ######
 
 plot(diff(kyoto_bloom), type="o")
 mean(diff(kyoto_bloom)) # drift estimate = .002
@@ -484,7 +485,7 @@ mean(diff(dc_bloom)) # drift estimate = .205
 acf(diff(dc_bloom), 48)
 #All plots suggest lagged 1 variable is statistically significant 
 
-####### Scatter plot on lagged variables ########
+#######  Scatter plot on lagged variables  #######
 
 lag1.plot(kyoto_bloom,4)
 lag1.plot(liestal_bloom,4)
@@ -547,7 +548,7 @@ cherrytembin %>%
 #############
 # OLS Model #
 #############
-### OLS Model: Year by Location ####
+################  OLS Model: Year by Location  ################
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
 iterations = 33
@@ -603,7 +604,7 @@ Results %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results$Abs_diff) # test error = 201.46
 
-#### OLS Model: Spring and Winter avg max temp #### 
+############  OLS Model: Spring and Winter Avg Max. Temp.  ############
 #Iterate from 2011-2021
 #Evaluate performance based on absolute difference between predicted dates and observed dates (2011-2021)
 iterations = 33
@@ -675,7 +676,7 @@ Results_V2 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results_V2$Abs_diff) # test error = 196.26
 
-######################### Comparing OLS models #########################
+#################  Comparing OLS models  #################
 
 out1 <- Results %>% group_by(Year) %>% summarise(Total_diff_v1=sum(Abs_diff))
 out2 <- Results_V2 %>% group_by(Year) %>% summarise(Total_diff_v2=sum(Abs_diff))
@@ -823,7 +824,7 @@ test.imputed <- train.imputed %>% bind_rows(test)
 test.imputed <- missForest(data.frame(test.imputed %>% select(-c("bloom_doy"))))$ximp
 test.imputed <- test.imputed %>% filter(year==2011)
 
-#boosting
+#Boosting
 set.seed(634)
 boost.cherry <- gbm(bloom_doy~., data=train.imputed, distribution = 'gaussian', n.trees = 5000, interaction.depth = 2,
                     shrinkage = 0.001)
@@ -839,7 +840,7 @@ mean((yhat.boost$predicted_doy-test$bloom_doy)**2) # test mse = 3.51
 #sum(abs(yhat.boost$predicted_doy-yhat.boost$bloom_doy))
 # test mas = 234.81 imputing all covariates in test set for 2011-2021
 
-############################ 2011 prediction results ############################
+############################  2011 prediction results  ############################
 
 # d=1, test mse=4.75
 # d=2, test mse=3.51
@@ -914,7 +915,7 @@ Results_V4 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 sum(Results_V4$Abs_diff) # test error = 104.07
 
 ##############################################################
-# Gradient Boosting with separate model for DC - FINAl Model #
+# Gradient Boosting with Separate Model for DC - FINAl Model #
 ##############################################################
 
 #Iterate from 2011-2021
@@ -1006,10 +1007,10 @@ Results_V5 %>% group_by(Year) %>% summarise(Total_diff=sum(Abs_diff))
 
 sum(Results_V5$Abs_diff) #100.61
 
-###############################################
-# test error with seed 634                    #
-# Using hot (Jan/Feb) & cold (Nov/Dec) counts #
-###############################################
+########################  Test Error  ########################
+
+## using seed 634 ##
+## Using hot (Jan/Feb) & cold (Nov/Dec) counts ##
 
 # 100.61 with hot and Mar sunlight for DC, no snwd_avg/tot_4
 # 106.60 with cold, hot and Mar sunlight
@@ -1022,18 +1023,12 @@ sum(Results_V5$Abs_diff) #100.61
 # 106.48 with cold, hot added and only 1979 forward data for DC with sunlight
 # 104.16 with cold, hot added and only 1979 forward data for DC with Mar sunlight only
 
-
-#######################################################
-# test error with seed 634                            #
-# Using hot (Feb/Mar/Apr) & cold (Nov/Dec/Jan) counts #
-#######################################################
+## using seed 634 ##
+## Using hot (Feb/Mar/Apr) & cold (Nov/Dec/Jan) counts ##
 
 # 113.09 with cold, hot added
 
-
-#####################
-# GAM model testing #
-#####################
+######################  GAM model testing  ######################
 
 gam_cherry <- gam(bloom_doy ~ location + s(year), data = cherry, 
                   subset = year >= 1880, family = poisson())
@@ -1051,7 +1046,6 @@ temp_exp<- temp_exp %>%
   summarise(avgt= mean(tavg, na.rm = TRUE))
 
 #All QQ plots for all 4 locations for the average temp by season
-#Use in Powerpoint
 temp_exp %>%
   ggplot(aes(sample= avgt, color = seasons)) + 
   stat_qq()+
@@ -1074,7 +1068,6 @@ tempseas<-transform(tempseas, cold= as.numeric(cold), hot= as.numeric(hot))
 complete<- merge(temp_exp, tempseas, by = c("location", "year", "seasons"))
 
 #Three graphs looking at relationship of temperature, hot, and bloom day
-#Use in Power Point
 #Scatter plot of hot vs. average temp.
 complete %>%
   filter(seasons=="Spring") %>%
@@ -1093,7 +1086,6 @@ in Spring with a loess linear smoothing line for the four different locations.")
         plot.caption = element_text(hjust=0))
 
 #Loess Smooth Juxtaposed Average temp and Hot with Bloom Date for just Spring
-#Use in Powerpoint
 p<-complete %>%
   filter(seasons=="Spring") %>%
   merge(cherry,. , by= c("location", "year")) %>%
@@ -1119,7 +1111,7 @@ grid.arrange(p, q, ncol=2, top = "Comparing Average Temperature and Number of Da
 bottom= textGrob("Figure 4: A loess smooth juxtaposed graph comparing average temp. and number of hot days with the peak bloom day for Spring.", 
                  gp= gpar(fontsize =9), just = "center"))
 
-##########     Predicting Average Temperature     ################
+##############  Predicting Average Temperature  ##############
 ls_fit<- lm(avgt~ location* I(year^2)+seasons, data= complete) #R^2 = .6431
 summary(ls_fit)
 
@@ -1131,7 +1123,7 @@ mean(ls_fit$residuals^2) #263.82
 AIC(ls_fit) #4260.21
 predict(ls_fit, newdata= complete)
 
-######  Predicting Hot Variable Given the Average Temperature  ############
+########  Predicting Hot Variable Given the Average Temperature  ########
 #Best Multiple Linear Regression
 ls_hot<- lm(hot~ avgt + location + seasons * I(year^2), data = complete)
 summary(ls_hot) #R^2= .4071
@@ -1159,7 +1151,7 @@ predict %>%
   facet_grid(factor(seasons) ~ str_to_title(location))+
   labs(x = "Year", y = "Average Temperature (1/10 °C)")
 
-##########  Using Predicted Average Temp to Predict Hot Covariate  ################
+##########  Using Predicted Average Temp to Predict Hot Covariate  ##########
 
 #When using "predicted_avgt" in the LR R^2 doesn't reduce by much compared to ls_hot LR
 ls_hotp<- lm(hot~ predicted_avgt + location + seasons * I(year^2), data = predict)
@@ -1172,7 +1164,7 @@ mean(ls_hotp$residuals^2) #3.35
 #AIC
 AIC(ls_hotp) #2058.26
 
-####### Using Predicted Average Temp to Compare to Actual Average Temp.  ########
+#######  Using Predicted Average Temp to Compare to Actual Average Temp.  #######
 
 pred.hot<- predict %>% 
   bind_cols(predicted_hot = round(predict(ls_hotp, newdata= predict)))
@@ -1189,7 +1181,7 @@ pred.hot %>%
        title="Scatterplot of Predicted Hot vs. Actual Hot 
        by Location Using the Predicted Average Temperature.")
 
-#### Using the actual average temp to compare to the actual to predicted hot ####
+#######  Using the actual average temp to compare to the actual to predicted hot  #######
 
 pred.hot.avg<- predict %>% 
   bind_cols(predicted_hot = round(predict(ls_hot, newdata= predict)))
@@ -1225,7 +1217,6 @@ AllHot<- subset(hot.avg, select= predhot.avg) %>%
   bind_cols(hot.pred)
 
 #Line Plot for comparing the three different hot variables for predicting
-#Use in Powerpoint
 AllHot %>%
   filter(seasons=="Spring") %>%
   ggplot(aes(x = year)) + 
@@ -1279,7 +1270,7 @@ DF<- DF %>%
   bind_cols(pcold=(predict(ls_fitcold, newdata= DF)))
 
 ################################################################################
-#####                  Combining Full Data Set                             #####
+#                      Combining Full Data Set                                 #
 ################################################################################
 
 a<- subset(DF, select= c("location","year","seasons","tavg","cold","hot")) %>%
@@ -1305,7 +1296,7 @@ Predict<- Predict %>%
   group_by(location, year) %>% summarize_all(list(~toString(unique(.)))) %>%
   transform(cold= as.numeric(cold), hot= as.numeric(hot), tavg= as.numeric(tavg))
 
-################## Full Data Set with Hot/Cold Forecasting #####################
+##################  Full Data Set with Hot/Cold Forecasting  ##################
 
 df_final<- select(df_final, -c("cold", "hot"))
 
@@ -1314,7 +1305,7 @@ complete_df<- full_join(df_final, Predict, by = c("year", "location"))
 ############################################################################
 # MC simulation to forecast remaining covariates and 2023-2031 bloom dates #
 ############################################################################
-#QQplot for Normality
+#Q-Q plot for Normality
 q1<- df_final %>%
   ggplot(aes(sample= tmax_avg_3, shape = location, color = str_to_title(location))) + 
   stat_qq()+
@@ -1344,7 +1335,6 @@ q2<- df_final %>%
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
-
 
 q3<- df_final %>%
   ggplot(aes(sample= snwd_avg_2, shape = location, color = str_to_title(location))) + 
@@ -1376,12 +1366,13 @@ q4<- df_final %>%
   theme_minimal()+
   theme(plot.title =element_text(hjust = 0.5))
 
-#Creating grid of all 4 QQ plots
+#Creating grid of all 4 Q-Q plots
 plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
 annotate_figure(plot, top = text_grob("Q-Q Plots for Forecasted Variables", face = "bold", size = 14, just = "center"),
                 bottom = text_grob(
                   'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
-#Forecast
+
+###################################  Forecast  #################################
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
   select(-c(lat, long, bloom_date, sunlight_avg_0, sunlight_avg_1, sunlight_avg_2, 
             sunlight_avg_4, snwd_tot_4, snwd_avg_4, cold, tavg))
@@ -1487,8 +1478,7 @@ for(i in 1:1000){
   
   Results_forecast <- rbind(Results_forecast, predictions %>% select(location, year, predicted_doy, iteration))
   Results_forecast <- rbind(Results_forecast, predictions.dc %>% select(location, year, predicted_doy, iteration))
-  
-}
+  }
 
 ##########################################
 # Generate predicted bloom date for 2022 #
@@ -1510,7 +1500,6 @@ predictions.2022 <- predict(boost.cherry, newdata=df.2022 %>% filter(location %i
   bind_cols(df.2022 %>% filter(location %in% c('liestal', 'kyoto')), predicted_doy=.)
 predictions.2022.dc <- predict(boost.cherry.dc, newdata=df.2022 %>% filter(location %in% c('vancouver', 'washingtondc'))) %>%
   bind_cols(df.2022 %>% filter(location %in% c('vancouver', 'washingtondc')), predicted_doy=.)
-
 
 output <- Results_forecast %>% group_by(location, year) %>% 
   summarise(iterations=n(), min_bloom_doy=min(predicted_doy),
