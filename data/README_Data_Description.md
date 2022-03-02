@@ -76,6 +76,25 @@ _Taken from the peak-bloom-prediction main GitHub README file_
 - t_max_avg_3- Average max temperature for March 
 - t_max_avg_4- Average max temperature for April
 
+**"historic_temperatures"**
+
+1018 obs. of 4 variables
+- location: kyoto, washingtondc, vancouver, liestal
+- year: 1950 to 2022
+- season: Winter, Spring, Fall, Summer
+- tmax_avg: Average maximum temperature for the given seasons in in 1/10 °C
+
+**"days_max & days_min"**
+
+~90900 obs. 3 variables
+- location: kyoto, washingtondc, vancouver, liestal
+- date: daily dates from 1950-01-01 to 2021-02-28
+- tmax: Daily maximum temperature measured in 1/10 °C
+- tmin: Daily minimum temperature measured in 1/10 °C
+
+
+
+
 - t_min_avg_i = Average minimum temperature measured in 1/10 °C
 - t_min_avg_0- Average min temperature for December 
 - t_min_avg_1- Average min temperature for Jan.
@@ -115,19 +134,3 @@ _Taken from the peak-bloom-prediction main GitHub README file_
 - long: Longitude
 - bloom_date- same as described above
 - bloom_doy- same as described above
-
-**"historic_temperatures"**
-
-1018 obs. of 4 variables
-- location: kyoto, washingtondc, vancouver, liestal
-- year: 1950 to 2022
-- season: Winter, Spring, Fall, Summer
-- tmax_avg: Average maximum temperature for the given seasons in in 1/10 °C
-
-**"days_max & days_min"**
-
-~90900 obs. 3 variables
-- location: kyoto, washingtondc, vancouver, liestal
-- date: daily dates from 1950-01-01 to 2021-02-28
-- tmax: Daily maximum temperature measured in 1/10 °C
-- tmin: Daily minimum temperature measured in 1/10 °C
