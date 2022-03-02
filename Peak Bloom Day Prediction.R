@@ -249,7 +249,6 @@ cherry %>%
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Bloom Days vs. Year grouped by Location")
 
 #Line Plot for years vs. Bloom Day
-
 cherry %>% filter(year >= 1950) %>%
   ggplot(aes(year,bloom_doy, color=location)) +
   geom_line(aes(),size =.8) +
@@ -439,7 +438,6 @@ par(mfrow=c(1,1))
 
 ######### Scatter plot of predicted bloom day versus actual bloom day ###########
 # Simple graph to see if high predicted values occur with high actual values
-
 predictions.epa %>% 
   ggplot(aes(x = bloom_doy, y = predicted_doy,
              color=location)) +
