@@ -537,11 +537,13 @@ cherrytembin %>%
   geom_line() +
   geom_point(aes(y = bloom_doy)) +
   labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Comparing Actual vs. Predicted Bloom Days", 
-  caption = "Figure 7: This is a scatterplot on actual bloom day and line plot of predicted bloom days
- use the linear regression model.")+
+  caption = 
+"Figure 8: This is a scatterplot on actual bloom day and line plot of predicted bloom days use the linear regression model.")+
   facet_wrap(~location, labeller = labeller(location=
     c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
-  theme(plot.caption = element_text(hjust=0))
+  theme_minimal(base_line_size = 1, base_rect_size = 1)+
+  theme(plot.title =element_text(hjust = 0.5), 
+        plot.caption = element_text(hjust=0))
 
 #############
 # OLS Model #
