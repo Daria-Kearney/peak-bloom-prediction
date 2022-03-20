@@ -254,7 +254,6 @@ cherry %>% filter(year >= 1950) %>%
   geom_line(aes(),size =.8) +
   labs(x="Year",
        y="Days from January 1st",
-       title="The Peak Bloom Days from 1950 to 2021",
        color = "Location",
        caption = "Figure 1: Peak bloom days starting January 1st of three different locations from 1950 to 2021") +
   scale_colour_manual(labels = c("Washington D.C.", "Kyoto", "Liestal- Weideli"),
@@ -536,9 +535,9 @@ cherrytembin %>%
   ggplot(aes(x = year, y = predicted_doy)) +
   geom_line() +
   geom_point(aes(y = bloom_doy)) +
-  labs(x = "Year", y = "Peak bloom (days since Jan 1st)", title = "Comparing Actual vs. Predicted Bloom Days", 
+  labs(x = "Year", y = "Peak bloom (days since Jan 1st)",
   caption = 
-"Figure 8: This is a scatterplot on actual bloom day and line plot of predicted bloom days use the linear regression model.")+
+"Figure 8: Scatterplot of actual bloom days. The lines show the predicted bloom days as obtained from the linear regression model.")+
   facet_wrap(~location, labeller = labeller(location=
     c("kyoto" = "Kyoto", "liestal" = "Liestal- Weideli","vancouver"="Vancouver", "washingtondc"= "Washington D.C.")))+
   theme_minimal(base_line_size = 1, base_rect_size = 1)+
@@ -1230,7 +1229,6 @@ AllHot %>%
                      labels= c("Actual Hot Value", "Predicted Hot Value", "Predict Hot|Predicted Temp."),
                      values=c("#D55E00", "#009E73", "#56B4E9")) + 
   labs(x = "Year", y = "Number of Hot Days", color = "Methods", 
-       title = "Line Plot of Number of Hot Days Given Methods of Predictions", 
        captions= "Figure 7: Line plot comparing the three different methods of predicting the number of hot days.")+
   theme_minimal()+
   theme(legend.key.size = unit(.5, "cm"), legend.key.height = unit(.5, "cm"), 
@@ -1364,13 +1362,12 @@ q4<- df_final %>%
                      labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5))
+  theme(plot.title =element_text(hjust = 0.5, size = 7))
 
 #Creating grid of all 4 Q-Q plots
 plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
-annotate_figure(plot, top = text_grob("Q-Q Plots for Forecasted Variables", face = "bold", size = 14, just = "center"),
-                bottom = text_grob(
-                  'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
+annotate_figure(plot, bottom = text_grob(
+        'Figure 6:Q-Q plots of four forecasted variables from the different locations.', just ="center", size = 10))
 
 ###################################  Forecast  #################################
 df.forecast <- complete_df %>% filter(year >= 1950) %>%
