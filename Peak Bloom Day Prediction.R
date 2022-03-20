@@ -1317,7 +1317,7 @@ q1<- df_final %>%
                      labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5))
+  theme(plot.title =element_text(hjust = 0.5, size = 12))
 
 q2<- df_final %>%
   ggplot(aes(sample= tmax_avg_2, shape = location, color = str_to_title(location))) + 
@@ -1332,7 +1332,7 @@ q2<- df_final %>%
                      labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5))
+  theme(plot.title =element_text(hjust = 0.5, size = 12))
 
 q3<- df_final %>%
   ggplot(aes(sample= snwd_avg_2, shape = location, color = str_to_title(location))) + 
@@ -1347,7 +1347,7 @@ q3<- df_final %>%
                      labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5))
+  theme(plot.title =element_text(hjust = 0.5, size = 12))
 
 q4<- df_final %>%
   ggplot(aes(sample= tmin_avg_3, shape = location, color = str_to_title(location))) + 
@@ -1362,7 +1362,7 @@ q4<- df_final %>%
                      labels= c("Kyoto", "Liestal-Weideli", 'Vancouver', "Washington D.C."),
                      values=c(15, 5, 17, 4))+
   theme_minimal()+
-  theme(plot.title =element_text(hjust = 0.5, size = 7))
+  theme(plot.title =element_text(hjust = 0.5, size = 12))
 
 #Creating grid of all 4 Q-Q plots
 plot<- ggarrange(q1, q2, q3, q4, ncol =2, nrow =2, common.legend= TRUE, legend = "right")
